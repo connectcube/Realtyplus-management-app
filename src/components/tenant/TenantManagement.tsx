@@ -103,10 +103,22 @@ const TenantManagement = ({
 }: TenantManagementProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddTenantOpen, setIsAddTenantOpen] = useState(false);
+  const [isEditTenantOpen, setIsEditTenantOpen] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [activeTab, setActiveTab] = useState("all");
+  const [tenantsList, setTenantsList] = useState<Tenant[]>(tenants);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    property: "",
+    unit: "",
+    leaseStart: "",
+    leaseEnd: "",
+    rentAmount: 0,
+  });
 
-  const filteredTenants = tenants.filter((tenant) => {
+  const filteredTenants = tenantsList.filter((tenant) => {
     const matchesSearch =
       tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       tenant.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -120,13 +132,94 @@ const TenantManagement = ({
     setSelectedTenant(tenant);
   };
 
+  const handleEditTenant = (tenant: Tenant) => {
+    setSelectedTenant(tenant);
+    setFormData({
+      name: tenant.name,
+      email: tenant.email,
+      phone: tenant.phone,
+      property: tenant.property,
+      unit: tenant.unit,
+      leaseStart: tenant.leaseStart,
+      leaseEnd: tenant.leaseEnd,
+      rentAmount: tenant.rentAmount,
+    });
+    setIsEditTenantOpen(true);
+  };
+
+  const handleDeleteTenant = (id: string) => {
+    if (confirm("Are you sure you want to delete this tenant?")) {
+      setTenantsList(tenantsList.filter((tenant) => tenant.id !== id));
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData({
+      ...formData,
+      [id]: id === "rentAmount" ? Number(value) : value,
+    });
+  };
+
+  const handleSaveTenant = () => {
+    // For new tenant
+    if (!selectedTenant) {
+      const newTenant: Tenant = {
+        id: `${tenantsList.length + 1}`,
+        ...formData,
+        status: "pending",
+      };
+      setTenantsList([...tenantsList, newTenant]);
+      setIsAddTenantOpen(false);
+      // Reset form
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        property: "",
+        unit: "",
+        leaseStart: "",
+        leaseEnd: "",
+        rentAmount: 0,
+      });
+      alert("New tenant added successfully!");
+    } else {
+      // For editing existing tenant
+      const updatedTenants = tenantsList.map((tenant) =>
+        tenant.id === selectedTenant.id ? { ...tenant, ...formData } : tenant,
+      );
+      setTenantsList(updatedTenants);
+      setIsEditTenantOpen(false);
+      setSelectedTenant(null);
+      alert("Tenant updated successfully!");
+    }
+  };
+
+  const handleAddNewTenant = () => {
+    setSelectedTenant(null);
+    setFormData({
+      name: "",
+      email: "",
+      phone: "",
+      property: "",
+      unit: "",
+      leaseStart: "",
+      leaseEnd: "",
+      rentAmount: 0,
+    });
+    setIsAddTenantOpen(true);
+  };
+
   return (
     <div className="w-full h-full bg-white p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Tenant Management</h1>
         <Dialog open={isAddTenantOpen} onOpenChange={setIsAddTenantOpen}>
           <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
+            <Button
+              className="flex items-center gap-2"
+              onClick={handleAddNewTenant}
+            >
               <UserPlus size={16} />
               Add New Tenant
             </Button>
@@ -145,7 +238,12 @@ const TenantManagement = ({
                   <label htmlFor="name" className="text-sm font-medium">
                     Full Name
                   </label>
-                  <Input id="name" placeholder="John Doe" />
+                  <Input
+                    id="name"
+                    placeholder="John Doe"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                  />
                 </div>
                 <div className="space-y-2">
                   <label htmlFor="email" className="text-sm font-medium">
@@ -155,6 +253,8 @@ const TenantManagement = ({
                     id="email"
                     type="email"
                     placeholder="john.doe@example.com"
+                    value={formData.email}
+                    onChange={handleInputChange}
                   />
                 </div>
               </div>
@@ -163,13 +263,23 @@ const TenantManagement = ({
                   <label htmlFor="phone" className="text-sm font-medium">
                     Phone Number
                   </label>
-                  <Input id="phone" placeholder="(555) 123-4567" />
+                  <Input
+                    id="phone"
+                    placeholder="(555) 123-4567"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                  />
                 </div>
                 <div className="space-y-2">
                   <label htmlFor="property" className="text-sm font-medium">
                     Property
                   </label>
-                  <Input id="property" placeholder="Sunset Apartments" />
+                  <Input
+                    id="property"
+                    placeholder="Sunset Apartments"
+                    value={formData.property}
+                    onChange={handleInputChange}
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -177,13 +287,24 @@ const TenantManagement = ({
                   <label htmlFor="unit" className="text-sm font-medium">
                     Unit
                   </label>
-                  <Input id="unit" placeholder="101" />
+                  <Input
+                    id="unit"
+                    placeholder="101"
+                    value={formData.unit}
+                    onChange={handleInputChange}
+                  />
                 </div>
                 <div className="space-y-2">
                   <label htmlFor="rentAmount" className="text-sm font-medium">
                     Monthly Rent
                   </label>
-                  <Input id="rentAmount" type="number" placeholder="1200" />
+                  <Input
+                    id="rentAmount"
+                    type="number"
+                    placeholder="1200"
+                    value={formData.rentAmount || ""}
+                    onChange={handleInputChange}
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -191,13 +312,23 @@ const TenantManagement = ({
                   <label htmlFor="leaseStart" className="text-sm font-medium">
                     Lease Start Date
                   </label>
-                  <Input id="leaseStart" type="date" />
+                  <Input
+                    id="leaseStart"
+                    type="date"
+                    value={formData.leaseStart}
+                    onChange={handleInputChange}
+                  />
                 </div>
                 <div className="space-y-2">
                   <label htmlFor="leaseEnd" className="text-sm font-medium">
                     Lease End Date
                   </label>
-                  <Input id="leaseEnd" type="date" />
+                  <Input
+                    id="leaseEnd"
+                    type="date"
+                    value={formData.leaseEnd}
+                    onChange={handleInputChange}
+                  />
                 </div>
               </div>
             </div>
@@ -208,7 +339,7 @@ const TenantManagement = ({
               >
                 Cancel
               </Button>
-              <Button>Save Tenant</Button>
+              <Button onClick={handleSaveTenant}>Save Tenant</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -245,10 +376,20 @@ const TenantManagement = ({
               <div className="flex justify-between items-start">
                 <CardTitle>{tenant.name}</CardTitle>
                 <div className="flex space-x-2">
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => handleEditTenant(tenant)}
+                  >
                     <Edit size={16} />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => handleDeleteTenant(tenant.id)}
+                  >
                     <Trash2 size={16} />
                   </Button>
                 </div>
@@ -322,10 +463,13 @@ const TenantManagement = ({
         </div>
       )}
 
+      {/* View Tenant Details Dialog */}
       {selectedTenant && (
         <Dialog
-          open={!!selectedTenant}
-          onOpenChange={() => setSelectedTenant(null)}
+          open={!!selectedTenant && !isEditTenantOpen}
+          onOpenChange={(open) => {
+            if (!open) setSelectedTenant(null);
+          }}
         >
           <DialogContent className="max-w-2xl">
             <DialogHeader>
@@ -395,7 +539,14 @@ const TenantManagement = ({
               <Button variant="outline" onClick={() => setSelectedTenant(null)}>
                 Close
               </Button>
-              <Button variant="outline" className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                className="flex items-center gap-2"
+                onClick={() => {
+                  setSelectedTenant(selectedTenant);
+                  handleEditTenant(selectedTenant);
+                }}
+              >
                 <Edit size={16} />
                 Edit Tenant
               </Button>
@@ -403,6 +554,124 @@ const TenantManagement = ({
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Edit Tenant Dialog */}
+      <Dialog open={isEditTenantOpen} onOpenChange={setIsEditTenantOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Tenant</DialogTitle>
+            <DialogDescription>
+              Update the tenant details below.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="name" className="text-sm font-medium">
+                  Full Name
+                </label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="email" className="text-sm font-medium">
+                  Email
+                </label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="phone" className="text-sm font-medium">
+                  Phone Number
+                </label>
+                <Input
+                  id="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="property" className="text-sm font-medium">
+                  Property
+                </label>
+                <Input
+                  id="property"
+                  value={formData.property}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="unit" className="text-sm font-medium">
+                  Unit
+                </label>
+                <Input
+                  id="unit"
+                  value={formData.unit}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="rentAmount" className="text-sm font-medium">
+                  Monthly Rent
+                </label>
+                <Input
+                  id="rentAmount"
+                  type="number"
+                  value={formData.rentAmount || ""}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="leaseStart" className="text-sm font-medium">
+                  Lease Start Date
+                </label>
+                <Input
+                  id="leaseStart"
+                  type="date"
+                  value={formData.leaseStart}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="leaseEnd" className="text-sm font-medium">
+                  Lease End Date
+                </label>
+                <Input
+                  id="leaseEnd"
+                  type="date"
+                  value={formData.leaseEnd}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsEditTenantOpen(false);
+                setSelectedTenant(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSaveTenant}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
