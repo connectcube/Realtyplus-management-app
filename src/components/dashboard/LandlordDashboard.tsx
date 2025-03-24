@@ -40,7 +40,7 @@ const LandlordDashboard = ({
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <Home className="h-6 w-6" />
-            <h1 className="text-xl font-bold">Property Management Platform</h1>
+            <h1 className="text-xl font-bold">RealtyPlus</h1>
           </div>
           <div className="flex items-center space-x-4">
             <div className="relative">
@@ -185,7 +185,7 @@ const LandlordDashboard = ({
 
       {/* Footer */}
       <footer className="bg-gray-100 border-t p-4 text-center text-sm text-gray-500">
-        <p>© 2023 Property Management Platform. All rights reserved.</p>
+        <p>© 2023 RealtyPlus. All rights reserved.</p>
       </footer>
     </div>
   );

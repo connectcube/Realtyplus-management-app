@@ -15,9 +15,7 @@ function Home() {
     <div className="w-screen h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
       <Card className="w-full max-w-4xl shadow-lg">
         <CardHeader className="bg-red-600 text-white rounded-t-lg">
-          <CardTitle className="text-2xl font-bold">
-            Property Management Platform
-          </CardTitle>
+          <CardTitle className="text-2xl font-bold">RealtyPlus</CardTitle>
           <CardDescription className="text-white/90">
             Connecting landlords, tenants, and contractors
           </CardDescription>

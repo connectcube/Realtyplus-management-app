@@ -47,7 +47,7 @@ const Header = ({
                 <path d="M12 5.432l8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75v4.5a.75.75 0 01-.75.75H5.625a1.875 1.875 0 01-1.875-1.875v-6.198c.03-.028.061-.056.091-.086L12 5.43z" />
               </svg>
             </div>
-            <h1 className="text-xl font-bold">Property Manager</h1>
+            <h1 className="text-xl font-bold">RealtyPlus</h1>
           </Link>
         </div>
 

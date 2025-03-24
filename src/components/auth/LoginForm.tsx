@@ -137,7 +137,7 @@ const LoginForm = () => {
       <Card className="w-full max-w-md bg-white shadow-lg rounded-lg">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">
-            Property Management Platform
+            RealtyPlus
           </CardTitle>
           <CardDescription className="text-center">
             Login or create an account to continue
