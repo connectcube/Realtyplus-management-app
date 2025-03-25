@@ -146,7 +146,7 @@ const PropertyOverview = ({
               <div>
                 <p className="text-sm text-muted-foreground">Monthly Revenue</p>
                 <p className="text-2xl font-bold">
-                  ${totalRevenue.toLocaleString()}
+                  ZMW {totalRevenue.toLocaleString()}
                 </p>
               </div>
               <DollarSign className="h-8 w-8 text-primary opacity-80" />
@@ -321,7 +321,7 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
           <div>
             <p className="text-muted-foreground">Monthly Revenue</p>
             <p className="font-medium">
-              ${property.monthlyRevenue.toLocaleString()}
+              ZMW {property.monthlyRevenue.toLocaleString()}
             </p>
           </div>
           <div>

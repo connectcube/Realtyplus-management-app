@@ -155,6 +155,11 @@ const BiddingOpportunities = () => {
       notes: "",
     });
     setBidFormOpen(false);
+
+    // Notify the user
+    alert(
+      "Your bid has been submitted successfully! The landlord will be notified and will contact you if your bid is accepted.",
+    );
   };
 
   const getPriorityBadge = (priority: "low" | "medium" | "high") => {

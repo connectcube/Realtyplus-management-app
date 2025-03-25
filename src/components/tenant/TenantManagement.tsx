@@ -182,7 +182,10 @@ const TenantManagement = ({
         leaseEnd: "",
         rentAmount: 0,
       });
-      alert("New tenant added successfully!");
+      alert(
+        "New tenant added successfully! An invitation email has been sent to the tenant to complete registration.",
+      );
+      console.log("New tenant added:", newTenant);
     } else {
       // For editing existing tenant
       const updatedTenants = tenantsList.map((tenant) =>
@@ -434,7 +437,7 @@ const TenantManagement = ({
             <CardFooter className="border-t pt-4">
               <div className="flex justify-between items-center w-full">
                 <div className="text-sm font-medium">
-                  ${tenant.rentAmount}/month
+                  ZMW {tenant.rentAmount.toLocaleString()}/month
                 </div>
                 <Button
                   variant="outline"
@@ -515,7 +518,7 @@ const TenantManagement = ({
                   </div>
                   <div>
                     <p className="text-sm font-medium">Monthly Rent</p>
-                    <p>${selectedTenant.rentAmount}</p>
+                    <p>ZMW {selectedTenant.rentAmount.toLocaleString()}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium">Status</p>

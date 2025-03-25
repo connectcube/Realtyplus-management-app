@@ -128,7 +128,7 @@ const JobCard = ({ job }: { job: CompletedJob }) => {
           </div>
           <div className="flex items-center">
             <DollarSign className="h-4 w-4 mr-2 text-gray-500" />
-            <span className="text-sm">${job.payment.toFixed(2)}</span>
+            <span className="text-sm">ZMW {job.payment.toLocaleString()}</span>
           </div>
           <div className="flex items-center">
             <ThumbsUp className="h-4 w-4 mr-2 text-gray-500" />

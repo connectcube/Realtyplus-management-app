@@ -53,6 +53,18 @@ const AssignedJobsList = ({ jobs = defaultJobs }: AssignedJobsListProps) => {
       ...prev,
       [jobId]: newStatus,
     }));
+
+    // Log the status change (in a real app, this would update the database)
+    console.log(`Job ${jobId} status changed to ${newStatus}`);
+
+    // Notify the user
+    if (newStatus === "completed") {
+      alert("Job marked as complete. The landlord has been notified.");
+    } else if (newStatus === "in_progress") {
+      alert("Job accepted. The landlord and tenant have been notified.");
+    } else if (newStatus === "declined") {
+      alert("Job declined. The landlord has been notified.");
+    }
   };
 
   const getStatusBadge = (status: string) => {

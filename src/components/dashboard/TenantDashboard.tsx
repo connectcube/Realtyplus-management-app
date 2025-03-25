@@ -105,7 +105,7 @@ const TenantDashboard = ({
                       End Date: December 31, 2023
                     </p>
                     <p className="text-sm text-gray-500">
-                      Monthly Rent: $1,200
+                      Monthly Rent: ZMW 1,200
                     </p>
                   </div>
 

@@ -194,7 +194,36 @@ const MessageCenter = ({
   const handleSendMessage = () => {
     if (newMessage.trim() === "") return;
     // In a real app, this would send the message to the backend
-    console.log("Sending message:", newMessage);
+    console.log(
+      "Sending message to conversation:",
+      selectedConversation,
+      newMessage,
+    );
+
+    // Simulate message being sent and received
+    const conversation = conversations.find(
+      (c) => c.id === selectedConversation,
+    );
+    if (conversation) {
+      // Add message to UI (in a real app this would come from the backend)
+      mockMessages.push({
+        id: `msg-${Date.now()}`,
+        sender: {
+          id: userId,
+          name: "You",
+          type: userType,
+        },
+        recipient: {
+          id: conversation.participant.id,
+          name: conversation.participant.name,
+          type: conversation.participant.type,
+        },
+        content: newMessage,
+        timestamp: new Date(),
+        read: true,
+      });
+    }
+
     setNewMessage("");
   };
 
@@ -203,9 +232,32 @@ const MessageCenter = ({
       // In a real app, this would create a new conversation and send the message
       console.log("Starting new conversation with:", selectedContact);
       console.log("Initial message:", newMessageContent);
+
+      // Find the contact details
+      const contact = contacts.find((c) => c.id === selectedContact);
+      if (contact) {
+        // Create a new conversation (in a real app this would be done on the backend)
+        const newConversationId = `conv-${Date.now()}`;
+        const newConversation = {
+          id: newConversationId,
+          participant: contact,
+          lastMessage: newMessageContent,
+          lastMessageTime: new Date(),
+          unreadCount: 0,
+        };
+
+        // Add to conversations list
+        conversations.unshift(newConversation);
+
+        // Set as selected conversation
+        setSelectedConversation(newConversationId);
+      }
+
       setSelectedContact("");
       setNewMessageContent("");
       setActiveTab("inbox");
+
+      alert("Message sent successfully!");
     }
   };
 

@@ -97,6 +97,10 @@ const MaintenanceRequestForm = ({
   // Handle form submission
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
     // In a real implementation, you would include the photos in the submission
+    console.log("Maintenance request submitted:", { ...values, photos });
+    alert(
+      "Maintenance request submitted successfully! Your landlord will be notified.",
+    );
     onSubmit({ ...values });
   };
 

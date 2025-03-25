@@ -64,9 +64,37 @@ const RequestHistoryList = ({
       : requests.filter((request) => request.status === activeTab);
 
   const handleAddComment = () => {
+    if (!selectedRequest || !newComment.trim()) return;
+
     // In a real app, this would send the comment to an API
     console.log("Adding comment to request:", selectedRequest?.id, newComment);
+
+    // Add the comment to the UI (in a real app this would come from the backend)
+    const updatedRequests = requests.map((req) => {
+      if (req.id === selectedRequest.id) {
+        return {
+          ...req,
+          comments: [
+            ...req.comments,
+            {
+              id: `comment-${Date.now()}`,
+              author: "You",
+              authorType: "tenant",
+              content: newComment,
+              timestamp: new Date(),
+              avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=You",
+            },
+          ],
+        };
+      }
+      return req;
+    });
+
+    // Update the UI
     setNewComment("");
+    alert(
+      "Comment added successfully! The landlord and contractor will be notified.",
+    );
   };
 
   const getStatusColor = (status: MaintenanceRequest["status"]) => {

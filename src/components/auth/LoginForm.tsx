@@ -97,12 +97,15 @@ const LoginForm = () => {
       switch (values.userType) {
         case "landlord":
           navigate("/landlord-dashboard");
+          console.log("Landlord login successful:", values);
           break;
         case "tenant":
           navigate("/tenant-dashboard");
+          console.log("Tenant login successful:", values);
           break;
         case "contractor":
           navigate("/contractor-dashboard");
+          console.log("Contractor login successful:", values);
           break;
         default:
           navigate("/tenant-dashboard");
@@ -119,12 +122,15 @@ const LoginForm = () => {
       switch (values.userType) {
         case "landlord":
           navigate("/landlord-dashboard");
+          console.log("Landlord registration successful:", values);
           break;
         case "tenant":
           navigate("/tenant-dashboard");
+          console.log("Tenant registration successful:", values);
           break;
         case "contractor":
           navigate("/contractor-dashboard");
+          console.log("Contractor registration successful:", values);
           break;
         default:
           navigate("/tenant-dashboard");

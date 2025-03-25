@@ -199,13 +199,46 @@ const MaintenanceRequestManager: React.FC<MaintenanceRequestManagerProps> = ({
     setIsAssignDialogOpen(true);
     // Reset filters when opening dialog
     setFilteredContractors(contractors);
-    setExpertiseFilter("");
+
+    // Pre-filter contractors based on request description to match expertise
+    const requestLower = request.description.toLowerCase();
+    if (
+      requestLower.includes("plumb") ||
+      requestLower.includes("leak") ||
+      requestLower.includes("sink") ||
+      requestLower.includes("toilet") ||
+      requestLower.includes("water")
+    ) {
+      setExpertiseFilter("plumbing");
+      applyFilters();
+    } else if (
+      requestLower.includes("electric") ||
+      requestLower.includes("light") ||
+      requestLower.includes("outlet") ||
+      requestLower.includes("switch")
+    ) {
+      setExpertiseFilter("electrical");
+      applyFilters();
+    } else if (
+      requestLower.includes("hvac") ||
+      requestLower.includes("air") ||
+      requestLower.includes("heat") ||
+      requestLower.includes("cooling")
+    ) {
+      setExpertiseFilter("hvac");
+      applyFilters();
+    } else {
+      setExpertiseFilter("");
+    }
+
     setMinExperience(0);
     setMinRating(0);
     setMinReviews(0);
     setAvailabilityFilter("");
     setSortBy("");
     setSelectedContractor(null);
+
+    console.log("Assigning contractor to request:", request);
   };
 
   const applyFilters = () => {
@@ -281,10 +314,29 @@ const MaintenanceRequestManager: React.FC<MaintenanceRequestManagerProps> = ({
       // In a real app, this would update the database
       // For now, we'll just close the dialog
       setIsAssignDialogOpen(false);
+
+      // Update the request status in our local state
+      const updatedRequests = requests.map((req) => {
+        if (req.id === selectedRequest.id) {
+          return {
+            ...req,
+            status: "assigned" as const,
+            assignedTo: selectedContractor.name,
+          };
+        }
+        return req;
+      });
+
       // You could show a success message here
       alert(
-        `Assigned ${selectedContractor.name} to request ${selectedRequest.id}`,
+        `Assigned ${selectedContractor.name} to request ${selectedRequest.id}. The contractor and tenant have been notified.`,
       );
+
+      console.log("Contractor assigned:", {
+        request: selectedRequest,
+        contractor: selectedContractor,
+        updatedStatus: "assigned",
+      });
     } else {
       alert("Please select a contractor before assigning");
     }
@@ -1020,7 +1072,7 @@ const MaintenanceRequestManager: React.FC<MaintenanceRequestManagerProps> = ({
                         </div>
                         <div className="text-right">
                           <span className="font-medium">
-                            ${contractor.hourlyRate}/hr
+                            ZMW {contractor.hourlyRate}/hr
                           </span>
                           <div className="mt-1 text-xs">
                             {contractor.availability === "immediate" && (
