@@ -157,18 +157,18 @@ const ContractorDashboard = ({
       {/* Header */}
       <header className="bg-red-600 text-white p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold">RealtyPlus</h1>
-          <div className="flex items-center gap-4">
+          <h1 className="text-lg sm:text-2xl font-bold">RealtyPlus</h1>
+          <div className="flex items-center gap-2 sm:gap-4">
             <div className="relative">
-              <Bell className="h-6 w-6 cursor-pointer" />
+              <Bell className="h-5 w-5 sm:h-6 sm:w-6 cursor-pointer" />
               {notificationCount > 0 && (
-                <Badge className="absolute -top-2 -right-2 bg-yellow-400 text-black">
+                <Badge className="absolute -top-2 -right-2 bg-yellow-400 text-black text-xs">
                   {notificationCount}
                 </Badge>
               )}
             </div>
             <div className="flex items-center gap-2">
-              <Avatar>
+              <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
                 <AvatarImage src={contractorAvatar} alt={contractorName} />
                 <AvatarFallback>{contractorName.charAt(0)}</AvatarFallback>
               </Avatar>
@@ -182,16 +182,20 @@ const ContractorDashboard = ({
 
       <div className="container mx-auto flex-1 p-4 md:p-6 flex flex-col">
         {/* Dashboard Summary */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold mb-4">Contractor Dashboard</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="p-4 flex items-center gap-4 bg-white">
-              <div className="bg-blue-100 p-3 rounded-full">
-                <Briefcase className="h-6 w-6 text-blue-600" />
+        <div className="mb-4 sm:mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">
+            Contractor Dashboard
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+            <Card className="p-3 sm:p-4 flex items-center gap-3 sm:gap-4 bg-white">
+              <div className="bg-blue-100 p-2 sm:p-3 rounded-full">
+                <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Upcoming Jobs</p>
-                <p className="text-2xl font-bold">{upcomingJobs}</p>
+                <p className="text-xs sm:text-sm text-gray-500">
+                  Upcoming Jobs
+                </p>
+                <p className="text-lg sm:text-2xl font-bold">{upcomingJobs}</p>
               </div>
             </Card>
             <Card className="p-4 flex items-center gap-4 bg-white">
@@ -222,32 +226,47 @@ const ContractorDashboard = ({
             onValueChange={setCurrentTab}
             className="w-full"
           >
-            <TabsList className="mb-6 bg-white p-1 border rounded-lg">
+            <TabsList className="mb-4 sm:mb-6 bg-white p-1 border rounded-lg overflow-x-auto flex-nowrap">
               <TabsTrigger
                 value="assigned-jobs"
-                className="flex items-center gap-2"
+                className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm flex-shrink-0"
               >
-                <Briefcase className="h-4 w-4" />
+                <Briefcase className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>Assigned Jobs</span>
               </TabsTrigger>
-              <TabsTrigger value="bidding" className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                <span>Bidding Opportunities</span>
+              <TabsTrigger
+                value="bidding"
+                className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm flex-shrink-0"
+              >
+                <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span>Bidding</span>
               </TabsTrigger>
-              <TabsTrigger value="history" className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
+              <TabsTrigger
+                value="history"
+                className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm flex-shrink-0"
+              >
+                <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>Job History</span>
               </TabsTrigger>
-              <TabsTrigger value="messages" className="flex items-center gap-2">
-                <MessageCircle className="h-4 w-4" />
+              <TabsTrigger
+                value="messages"
+                className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm flex-shrink-0"
+              >
+                <MessageCircle className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>Messages</span>
               </TabsTrigger>
-              <TabsTrigger value="profile" className="flex items-center gap-2">
-                <User className="h-4 w-4" />
+              <TabsTrigger
+                value="profile"
+                className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm flex-shrink-0"
+              >
+                <User className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>Profile</span>
               </TabsTrigger>
-              <TabsTrigger value="payments" className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
+              <TabsTrigger
+                value="payments"
+                className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm flex-shrink-0"
+              >
+                <DollarSign className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>Payments</span>
               </TabsTrigger>
             </TabsList>

@@ -38,11 +38,11 @@ const LandlordDashboard = ({
       {/* Header */}
       <header className="bg-red-600 text-white p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <Home className="h-6 w-6" />
-            <h1 className="text-xl font-bold">RealtyPlus</h1>
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            <Home className="h-5 w-5 sm:h-6 sm:w-6" />
+            <h1 className="text-lg sm:text-xl font-bold">RealtyPlus</h1>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             <div className="relative">
               <Bell className="h-5 w-5 cursor-pointer" />
               {(maintenanceCount > 0 || unreadMessages > 0) && (
@@ -55,7 +55,7 @@ const LandlordDashboard = ({
               <div className="h-8 w-8 rounded-full bg-red-700 flex items-center justify-center">
                 <User className="h-5 w-5" />
               </div>
-              <span>{landlordName}</span>
+              <span className="hidden sm:inline">{landlordName}</span>
             </div>
             <Button variant="ghost" size="icon">
               <Settings className="h-5 w-5" />
@@ -67,15 +67,15 @@ const LandlordDashboard = ({
       {/* Dashboard Content */}
       <main className="flex-1 container mx-auto p-4 md:p-6">
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
           <Card className="bg-white">
-            <CardContent className="p-4 flex items-center justify-between">
+            <CardContent className="p-3 sm:p-4 flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Properties</p>
-                <p className="text-2xl font-bold">{propertyCount}</p>
+                <p className="text-xs sm:text-sm text-gray-500">Properties</p>
+                <p className="text-lg sm:text-2xl font-bold">{propertyCount}</p>
               </div>
-              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <Home className="h-5 w-5 text-blue-600" />
+              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                <Home className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
               </div>
             </CardContent>
           </Card>
@@ -123,41 +123,41 @@ const LandlordDashboard = ({
           onValueChange={setActiveTab}
           className="bg-white rounded-lg shadow"
         >
-          <TabsList className="w-full justify-start border-b p-0 rounded-t-lg">
+          <TabsList className="w-full justify-start border-b p-0 rounded-t-lg overflow-x-auto flex-nowrap">
             <TabsTrigger
               value="properties"
-              className="data-[state=active]:bg-white rounded-none border-b-2 border-transparent data-[state=active]:border-red-600 px-6 py-3"
+              className="data-[state=active]:bg-white rounded-none border-b-2 border-transparent data-[state=active]:border-red-600 px-3 sm:px-6 py-2 sm:py-3 flex-shrink-0"
             >
-              <Home className="h-4 w-4 mr-2" />
-              Properties
+              <Home className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="text-xs sm:text-sm">Properties</span>
             </TabsTrigger>
             <TabsTrigger
               value="tenants"
-              className="data-[state=active]:bg-white rounded-none border-b-2 border-transparent data-[state=active]:border-red-600 px-6 py-3"
+              className="data-[state=active]:bg-white rounded-none border-b-2 border-transparent data-[state=active]:border-red-600 px-3 sm:px-6 py-2 sm:py-3 flex-shrink-0"
             >
-              <User className="h-4 w-4 mr-2" />
-              Tenants
+              <User className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="text-xs sm:text-sm">Tenants</span>
             </TabsTrigger>
             <TabsTrigger
               value="maintenance"
-              className="data-[state=active]:bg-white rounded-none border-b-2 border-transparent data-[state=active]:border-red-600 px-6 py-3"
+              className="data-[state=active]:bg-white rounded-none border-b-2 border-transparent data-[state=active]:border-red-600 px-3 sm:px-6 py-2 sm:py-3 flex-shrink-0"
             >
-              <Wrench className="h-4 w-4 mr-2" />
-              Maintenance
+              <Wrench className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="text-xs sm:text-sm">Maintenance</span>
             </TabsTrigger>
             <TabsTrigger
               value="rent"
-              className="data-[state=active]:bg-white rounded-none border-b-2 border-transparent data-[state=active]:border-red-600 px-6 py-3"
+              className="data-[state=active]:bg-white rounded-none border-b-2 border-transparent data-[state=active]:border-red-600 px-3 sm:px-6 py-2 sm:py-3 flex-shrink-0"
             >
-              <span className="mr-2">$</span>
-              Rent Tracking
+              <span className="mr-1 sm:mr-2">$</span>
+              <span className="text-xs sm:text-sm">Rent Tracking</span>
             </TabsTrigger>
             <TabsTrigger
               value="messages"
-              className="data-[state=active]:bg-white rounded-none border-b-2 border-transparent data-[state=active]:border-red-600 px-6 py-3"
+              className="data-[state=active]:bg-white rounded-none border-b-2 border-transparent data-[state=active]:border-red-600 px-3 sm:px-6 py-2 sm:py-3 flex-shrink-0"
             >
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Messages
+              <MessageSquare className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="text-xs sm:text-sm">Messages</span>
             </TabsTrigger>
           </TabsList>
 

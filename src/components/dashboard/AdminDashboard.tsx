@@ -471,42 +471,50 @@ export default function AdminDashboard() {
   return (
     <div className="flex min-h-screen w-full flex-col bg-slate-50">
       {/* Header */}
-      <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-white px-4 md:px-6">
-        <div className="flex items-center gap-2">
-          <Shield className="h-6 w-6 text-red-600" />
-          <h1 className="text-lg font-semibold">RealtyPlus Admin</h1>
+      <header className="sticky top-0 z-10 flex h-14 sm:h-16 items-center gap-2 sm:gap-4 border-b bg-white px-3 sm:px-4 md:px-6">
+        <div className="flex items-center gap-1 sm:gap-2">
+          <Shield className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
+          <h1 className="text-base sm:text-lg font-semibold">
+            RealtyPlus Admin
+          </h1>
         </div>
-        <div className="ml-auto flex items-center gap-4">
-          <Button variant="outline" size="sm">
+        <div className="ml-auto flex items-center gap-2 sm:gap-4">
+          <Button variant="outline" size="sm" className="hidden sm:flex">
             <Settings className="mr-2 h-4 w-4" />
             Settings
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="hidden sm:flex">
             <MessageSquare className="mr-2 h-4 w-4" />
             Support
           </Button>
+          <Button variant="ghost" size="icon" className="sm:hidden">
+            <Settings className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="sm:hidden">
+            <MessageSquare className="h-4 w-4" />
+          </Button>
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-red-600 flex items-center justify-center text-white font-semibold">
+            <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-red-600 flex items-center justify-center text-white font-semibold">
               A
             </div>
-            <span className="text-sm font-medium">Admin</span>
+            <span className="text-xs sm:text-sm font-medium">Admin</span>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex flex-1 flex-col gap-4 p-4 md:p-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Platform Overview</h1>
-          <div className="flex items-center gap-2">
+      <main className="flex flex-1 flex-col gap-3 sm:gap-4 p-3 sm:p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+          <h1 className="text-xl sm:text-2xl font-bold">Platform Overview</h1>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
             <Input
               placeholder="Search..."
-              className="w-64"
+              className="w-full sm:w-64"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
             <Select defaultValue="today">
-              <SelectTrigger className="w-36">
+              <SelectTrigger className="w-full sm:w-36">
                 <SelectValue placeholder="Select period" />
               </SelectTrigger>
               <SelectContent>
@@ -520,7 +528,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {stats.map((stat, index) => (
             <Card key={index}>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -537,17 +545,35 @@ export default function AdminDashboard() {
         </div>
 
         {/* Tabs Section */}
-        <Tabs defaultValue="overview" className="mt-4">
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="properties">Properties</TabsTrigger>
-            <TabsTrigger value="users">Users</TabsTrigger>
-            <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
-            <TabsTrigger value="payments">Payments</TabsTrigger>
-            <TabsTrigger value="reports">Reports</TabsTrigger>
-            <TabsTrigger value="trust">Trust & Safety</TabsTrigger>
-            <TabsTrigger value="audit">Audit Log</TabsTrigger>
-            <TabsTrigger value="admins">Admin Management</TabsTrigger>
+        <Tabs defaultValue="overview" className="mt-3 sm:mt-4">
+          <TabsList className="flex flex-wrap sm:flex-nowrap overflow-x-auto">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm">
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="properties" className="text-xs sm:text-sm">
+              Properties
+            </TabsTrigger>
+            <TabsTrigger value="users" className="text-xs sm:text-sm">
+              Users
+            </TabsTrigger>
+            <TabsTrigger value="maintenance" className="text-xs sm:text-sm">
+              Maintenance
+            </TabsTrigger>
+            <TabsTrigger value="payments" className="text-xs sm:text-sm">
+              Payments
+            </TabsTrigger>
+            <TabsTrigger value="reports" className="text-xs sm:text-sm">
+              Reports
+            </TabsTrigger>
+            <TabsTrigger value="trust" className="text-xs sm:text-sm">
+              Trust & Safety
+            </TabsTrigger>
+            <TabsTrigger value="audit" className="text-xs sm:text-sm">
+              Audit Log
+            </TabsTrigger>
+            <TabsTrigger value="admins" className="text-xs sm:text-sm">
+              Admin Management
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="overview" className="mt-4 space-y-4">
             <Card>

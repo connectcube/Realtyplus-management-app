@@ -228,13 +228,13 @@ const TenantManagement = ({
   };
 
   return (
-    <div className="w-full h-full bg-white p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Tenant Management</h1>
+    <div className="w-full h-full bg-white p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold">Tenant Management</h1>
         <Dialog open={isAddTenantOpen} onOpenChange={setIsAddTenantOpen}>
           <DialogTrigger asChild>
             <Button
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 w-full sm:w-auto"
               onClick={handleAddNewTenant}
             >
               <UserPlus size={16} />
@@ -362,8 +362,8 @@ const TenantManagement = ({
         </Dialog>
       </div>
 
-      <div className="flex justify-between items-center mb-6">
-        <div className="relative w-1/3">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 sm:mb-6">
+        <div className="relative w-full sm:w-1/3">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search tenants..."
@@ -374,10 +374,10 @@ const TenantManagement = ({
         </div>
         <Tabs
           defaultValue="all"
-          className="w-auto"
+          className="w-full sm:w-auto"
           onValueChange={setActiveTab}
         >
-          <TabsList>
+          <TabsList className="w-full sm:w-auto grid grid-cols-2 sm:flex sm:flex-row gap-1 sm:gap-0">
             <TabsTrigger value="all">All Tenants</TabsTrigger>
             <TabsTrigger value="active">Active</TabsTrigger>
             <TabsTrigger value="pending">Pending</TabsTrigger>
@@ -386,7 +386,7 @@ const TenantManagement = ({
         </Tabs>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {filteredTenants.map((tenant) => (
           <Card key={tenant.id} className="overflow-hidden">
             <CardHeader className="pb-2">

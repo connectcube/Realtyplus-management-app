@@ -45,11 +45,11 @@ const JobHistory = ({
   completedJobs = defaultCompletedJobs,
 }: JobHistoryProps) => {
   return (
-    <div className="w-full h-full bg-white p-6 rounded-lg">
+    <div className="w-full h-full bg-white p-4 sm:p-6 rounded-lg">
       <Tabs defaultValue="all" className="w-full">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">Job History</h2>
-          <TabsList>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 mb-4">
+          <h2 className="text-xl sm:text-2xl font-bold">Job History</h2>
+          <TabsList className="w-full sm:w-auto">
             <TabsTrigger value="all">All Jobs</TabsTrigger>
             <TabsTrigger value="recent">Recent</TabsTrigger>
             <TabsTrigger value="rated">Highly Rated</TabsTrigger>
@@ -91,23 +91,23 @@ const JobCard = ({ job }: { job: CompletedJob }) => {
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-2 sm:gap-0">
           <div>
-            <CardTitle>{job.title}</CardTitle>
-            <CardDescription className="flex items-center mt-1">
-              <MapPin className="h-4 w-4 mr-1 text-gray-500" />
+            <CardTitle className="text-base sm:text-lg">{job.title}</CardTitle>
+            <CardDescription className="flex items-center mt-1 text-xs sm:text-sm">
+              <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-gray-500" />
               {job.property} - {job.address}
             </CardDescription>
           </div>
-          <div className="flex flex-col items-end">
-            <Badge variant="outline" className="mb-2">
+          <div className="flex flex-row sm:flex-col items-center sm:items-end gap-2 sm:gap-0">
+            <Badge variant="outline" className="mb-0 sm:mb-2">
               Completed
             </Badge>
             <div className="flex items-center">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star
                   key={i}
-                  className={`h-4 w-4 ${i < job.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`}
+                  className={`h-3 w-3 sm:h-4 sm:w-4 ${i < job.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`}
                 />
               ))}
             </div>
@@ -115,9 +115,11 @@ const JobCard = ({ job }: { job: CompletedJob }) => {
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-gray-600 mb-4">{job.description}</p>
+        <p className="text-xs sm:text-sm text-gray-600 mb-4">
+          {job.description}
+        </p>
 
-        <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 mb-4">
           <div className="flex items-center">
             <Calendar className="h-4 w-4 mr-2 text-gray-500" />
             <span className="text-sm">{job.completedDate}</span>
@@ -155,14 +157,14 @@ const JobCard = ({ job }: { job: CompletedJob }) => {
         {job.images && job.images.length > 0 && (
           <div>
             <Separator className="my-2" />
-            <p className="text-sm font-medium mb-2">Work Photos</p>
-            <div className="grid grid-cols-3 gap-2">
+            <p className="text-xs sm:text-sm font-medium mb-2">Work Photos</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {job.images.map((image, index) => (
                 <img
                   key={index}
                   src={image}
                   alt={`Work photo ${index + 1}`}
-                  className="h-20 w-full object-cover rounded-md"
+                  className="h-16 sm:h-20 w-full object-cover rounded-md"
                 />
               ))}
             </div>
