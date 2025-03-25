@@ -5,6 +5,7 @@ import LoginForm from "./components/auth/LoginForm";
 import TenantDashboard from "./components/dashboard/TenantDashboard";
 import LandlordDashboard from "./components/dashboard/LandlordDashboard";
 import ContractorDashboard from "./components/dashboard/ContractorDashboard";
+import AdminDashboard from "./components/dashboard/AdminDashboard";
 import MaintenanceRequestManager from "./components/maintenance/MaintenanceRequestManager";
 import MaintenanceRequestForm from "./components/maintenance/MaintenanceRequestForm";
 import TenantManagement from "./components/tenant/TenantManagement";
@@ -29,6 +30,7 @@ function App() {
             path="/contractor-dashboard"
             element={<ContractorDashboard />}
           />
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route
             path="/maintenance-requests"
             element={<MaintenanceRequestManager />}
