@@ -5,7 +5,19 @@ import RentStatusCard from "./RentStatusCard";
 import MaintenanceRequestForm from "../maintenance/MaintenanceRequestForm";
 import RequestHistoryList from "../maintenance/RequestHistoryList";
 import MessageCenter from "../communication/MessageCenter";
-import { Home, Wrench, FileText, MessageCircle } from "lucide-react";
+import { Home, Wrench, FileText, MessageCircle, Star } from "lucide-react";
+import RatingStars from "@/components/rating/RatingStars";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 
 interface TenantDashboardProps {
   tenantName?: string;
@@ -31,6 +43,9 @@ const TenantDashboard = ({
   },
 }: TenantDashboardProps) => {
   const [activeTab, setActiveTab] = useState("rent");
+  const [showRatingDialog, setShowRatingDialog] = useState(false);
+  const [landlordRating, setLandlordRating] = useState(0);
+  const [ratingComment, setRatingComment] = useState("");
 
   return (
     <div className="w-full min-h-screen bg-gray-50">
@@ -80,6 +95,7 @@ const TenantDashboard = ({
                 status={rentInfo.status}
                 remainingDays={rentInfo.remainingDays}
                 percentagePaid={rentInfo.percentagePaid}
+                enablePayment={true}
               />
 
               <Card className="bg-white shadow-md p-6">
@@ -107,6 +123,13 @@ const TenantDashboard = ({
                     <p className="text-sm text-gray-500">
                       Monthly Rent: ZMW 1,200
                     </p>
+                    <Button
+                      variant="link"
+                      className="text-sm p-0 h-auto mt-2 text-blue-600"
+                      onClick={() => setShowRatingDialog(true)}
+                    >
+                      Rate your landlord
+                    </Button>
                   </div>
 
                   <div>
@@ -138,6 +161,61 @@ const TenantDashboard = ({
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Landlord Rating Dialog */}
+      <Dialog open={showRatingDialog} onOpenChange={setShowRatingDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rate Your Landlord</DialogTitle>
+            <DialogDescription>
+              Please rate your experience with your landlord.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="rating">Rating</Label>
+              <RatingStars
+                rating={landlordRating}
+                onRatingChange={setLandlordRating}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="comment">Comments (Optional)</Label>
+              <Textarea
+                id="comment"
+                placeholder="Share your experience with your landlord..."
+                value={ratingComment}
+                onChange={(e) => setRatingComment(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowRatingDialog(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                console.log(
+                  `Rated landlord ${landlordRating} stars with comment: ${ratingComment}`,
+                );
+                setShowRatingDialog(false);
+                setLandlordRating(0);
+                setRatingComment("");
+                alert(
+                  "Thank you for your feedback! Your rating has been submitted.",
+                );
+              }}
+            >
+              Submit Rating
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

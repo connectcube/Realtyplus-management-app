@@ -27,7 +27,11 @@ import {
   MoreHorizontal,
   Wrench,
   X,
+  Star,
 } from "lucide-react";
+import RatingStars from "@/components/rating/RatingStars";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Job {
   id: string;
@@ -48,6 +52,11 @@ const AssignedJobsList = ({ jobs = defaultJobs }: AssignedJobsListProps) => {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [jobStatus, setJobStatus] = useState<Record<string, string>>({});
 
+  const [showRatingDialog, setShowRatingDialog] = useState(false);
+  const [jobToRate, setJobToRate] = useState<Job | null>(null);
+  const [landlordRating, setLandlordRating] = useState(0);
+  const [ratingComment, setRatingComment] = useState("");
+
   const handleStatusChange = (jobId: string, newStatus: string) => {
     setJobStatus((prev) => ({
       ...prev,
@@ -59,7 +68,13 @@ const AssignedJobsList = ({ jobs = defaultJobs }: AssignedJobsListProps) => {
 
     // Notify the user
     if (newStatus === "completed") {
-      alert("Job marked as complete. The landlord has been notified.");
+      const job = jobs.find((j) => j.id === jobId);
+      if (job) {
+        setJobToRate(job);
+        setShowRatingDialog(true);
+      } else {
+        alert("Job marked as complete. The landlord has been notified.");
+      }
     } else if (newStatus === "in_progress") {
       alert("Job accepted. The landlord and tenant have been notified.");
     } else if (newStatus === "declined") {
@@ -332,6 +347,68 @@ const AssignedJobsList = ({ jobs = defaultJobs }: AssignedJobsListProps) => {
             </DialogFooter>
           </DialogContent>
         )}
+        {/* Rating Dialog */}
+        <Dialog open={showRatingDialog} onOpenChange={setShowRatingDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Rate the Landlord</DialogTitle>
+              <DialogDescription>
+                Please rate your experience working with the landlord on this
+                job.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Job: {jobToRate?.title}</Label>
+                <p className="text-sm text-gray-500">
+                  {jobToRate?.description}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="rating">Rating</Label>
+                <RatingStars
+                  rating={landlordRating}
+                  onRatingChange={setLandlordRating}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="comment">Comments (Optional)</Label>
+                <Textarea
+                  id="comment"
+                  placeholder="Share your experience working with this landlord..."
+                  value={ratingComment}
+                  onChange={(e) => setRatingComment(e.target.value)}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowRatingDialog(false);
+                  alert(
+                    "Job marked as complete. The landlord has been notified.",
+                  );
+                }}
+              >
+                Skip
+              </Button>
+              <Button
+                onClick={() => {
+                  console.log(
+                    `Rated landlord ${landlordRating} stars with comment: ${ratingComment}`,
+                  );
+                  setShowRatingDialog(false);
+                  setLandlordRating(0);
+                  setRatingComment("");
+                  alert("Thank you for your feedback! Job marked as complete.");
+                }}
+              >
+                Submit Rating
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </Dialog>
     </div>
   );

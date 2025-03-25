@@ -185,7 +185,7 @@ const LandlordDashboard = ({
 
       {/* Footer */}
       <footer className="bg-gray-100 border-t p-4 text-center text-sm text-gray-500">
-        <p>© 2023 RealtyPlus. All rights reserved.</p>
+        <p>© 2025 RealtyPlus. All rights reserved.</p>
       </footer>
     </div>
   );

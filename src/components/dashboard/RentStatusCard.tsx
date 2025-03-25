@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Card,
   CardContent,
@@ -16,6 +16,8 @@ import {
   DollarSign,
   AlertCircle,
   CheckCircle2,
+  Building,
+  Smartphone,
 } from "lucide-react";
 import {
   Tooltip,
@@ -23,6 +25,23 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 
 interface PaymentHistory {
   id: string;
@@ -38,6 +57,7 @@ interface RentStatusCardProps {
   paymentHistory?: PaymentHistory[];
   remainingDays?: number;
   percentagePaid?: number;
+  enablePayment?: boolean;
 }
 
 const RentStatusCard = ({
@@ -51,7 +71,14 @@ const RentStatusCard = ({
   ],
   remainingDays = 5,
   percentagePaid = 0,
+  enablePayment = false,
 }: RentStatusCardProps) => {
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("bank");
+  const [bankName, setBankName] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [mobileProvider, setMobileProvider] = useState("airtel");
+  const [mobileNumber, setMobileNumber] = useState("");
   const getStatusColor = () => {
     switch (status) {
       case "paid":
@@ -92,9 +119,9 @@ const RentStatusCard = ({
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-ZM", {
       style: "currency",
-      currency: "USD",
+      currency: "ZMW",
     }).format(amount);
   };
 
@@ -181,7 +208,11 @@ const RentStatusCard = ({
         </div>
       </CardContent>
       <CardFooter className="flex gap-2 pt-2">
-        <Button className="flex-1 gap-2">
+        <Button
+          className="flex-1 gap-2"
+          onClick={() => enablePayment && setShowPaymentDialog(true)}
+          disabled={!enablePayment || status === "paid"}
+        >
           <CreditCard className="h-4 w-4" />
           Pay Now
         </Button>
@@ -190,6 +221,125 @@ const RentStatusCard = ({
           Payment History
         </Button>
       </CardFooter>
+
+      {/* Payment Dialog */}
+      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Pay Rent</DialogTitle>
+            <DialogDescription>
+              Make your rent payment using your preferred payment method
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="bg-gray-50 p-3 rounded-md mb-4">
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <span className="text-gray-500">Amount Due:</span>
+                  <p className="font-medium">{formatCurrency(amount)}</p>
+                </div>
+                <div>
+                  <span className="text-gray-500">Due Date:</span>
+                  <p className="font-medium">{formatDate(dueDate)}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="payment-method">Payment Method</Label>
+              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                <SelectTrigger id="payment-method">
+                  <SelectValue placeholder="Select payment method" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bank">
+                    <div className="flex items-center">
+                      <Building className="h-4 w-4 mr-2" />
+                      Bank Transfer
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="mobile">
+                    <div className="flex items-center">
+                      <Smartphone className="h-4 w-4 mr-2" />
+                      Mobile Money
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {paymentMethod === "bank" ? (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="bank-name">Bank Name</Label>
+                  <Input
+                    id="bank-name"
+                    placeholder="Enter bank name"
+                    value={bankName}
+                    onChange={(e) => setBankName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="account-number">Account Number</Label>
+                  <Input
+                    id="account-number"
+                    placeholder="Enter account number"
+                    value={accountNumber}
+                    onChange={(e) => setAccountNumber(e.target.value)}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="mobile-provider">Mobile Provider</Label>
+                  <Select
+                    value={mobileProvider}
+                    onValueChange={setMobileProvider}
+                  >
+                    <SelectTrigger id="mobile-provider">
+                      <SelectValue placeholder="Select mobile provider" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="airtel">Airtel Money</SelectItem>
+                      <SelectItem value="mtn">MTN Mobile Money</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="mobile-number">Mobile Number</Label>
+                  <Input
+                    id="mobile-number"
+                    placeholder="Enter mobile number"
+                    value={mobileNumber}
+                    onChange={(e) => setMobileNumber(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowPaymentDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                alert(
+                  `Payment of ${formatCurrency(amount)} processed via ${paymentMethod === "bank" ? `Bank Transfer (${bankName}, ${accountNumber})` : `Mobile Money (${mobileProvider}, ${mobileNumber})`}`,
+                );
+                setShowPaymentDialog(false);
+              }}
+            >
+              Process Payment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

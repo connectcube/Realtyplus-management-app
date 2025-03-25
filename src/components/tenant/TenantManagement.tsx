@@ -29,6 +29,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import RatingStars from "@/components/rating/RatingStars";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 interface Tenant {
   id: string;
@@ -147,9 +150,20 @@ const TenantManagement = ({
     setIsEditTenantOpen(true);
   };
 
+  const [showRatingDialog, setShowRatingDialog] = useState(false);
+  const [tenantToRate, setTenantToRate] = useState<Tenant | null>(null);
+  const [tenantRating, setTenantRating] = useState(0);
+  const [ratingComment, setRatingComment] = useState("");
+
   const handleDeleteTenant = (id: string) => {
     if (confirm("Are you sure you want to delete this tenant?")) {
-      setTenantsList(tenantsList.filter((tenant) => tenant.id !== id));
+      const tenant = tenantsList.find((t) => t.id === id);
+      if (tenant) {
+        setTenantToRate(tenant);
+        setShowRatingDialog(true);
+      } else {
+        setTenantsList(tenantsList.filter((tenant) => tenant.id !== id));
+      }
     }
   };
 
@@ -672,6 +686,75 @@ const TenantManagement = ({
               Cancel
             </Button>
             <Button onClick={handleSaveTenant}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Tenant Rating Dialog */}
+      <Dialog open={showRatingDialog} onOpenChange={setShowRatingDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rate Tenant</DialogTitle>
+            <DialogDescription>
+              Please rate your experience with this tenant before removing them.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Tenant: {tenantToRate?.name}</Label>
+              <p className="text-sm text-gray-500">
+                {tenantToRate?.property} - Unit {tenantToRate?.unit}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="rating">Rating</Label>
+              <RatingStars
+                rating={tenantRating}
+                onRatingChange={setTenantRating}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="comment">Comments (Optional)</Label>
+              <Textarea
+                id="comment"
+                placeholder="Share your experience with this tenant..."
+                value={ratingComment}
+                onChange={(e) => setRatingComment(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowRatingDialog(false);
+                setTenantsList(
+                  tenantsList.filter(
+                    (tenant) => tenant.id !== tenantToRate?.id,
+                  ),
+                );
+              }}
+            >
+              Skip
+            </Button>
+            <Button
+              onClick={() => {
+                console.log(
+                  `Rated tenant ${tenantRating} stars with comment: ${ratingComment}`,
+                );
+                setShowRatingDialog(false);
+                setTenantRating(0);
+                setRatingComment("");
+                setTenantsList(
+                  tenantsList.filter(
+                    (tenant) => tenant.id !== tenantToRate?.id,
+                  ),
+                );
+                alert("Thank you for your feedback! Tenant has been removed.");
+              }}
+            >
+              Submit Rating
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

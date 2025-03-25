@@ -347,15 +347,25 @@ const RentTracker = ({
                       </div>
 
                       {payment.status !== "paid" && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onSendReminder(payment.id)}
-                          className="flex items-center"
-                        >
-                          <Send className="h-4 w-4 mr-1" />
-                          Send Reminder
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onSendReminder(payment.id)}
+                            className="flex items-center"
+                          >
+                            <Send className="h-4 w-4 mr-1" />
+                            Send Reminder
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => setIsPaymentDialogOpen(true)}
+                            className="flex items-center"
+                          >
+                            <CreditCard className="h-4 w-4 mr-1" />
+                            Pay Now
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -516,13 +526,17 @@ const RentTracker = ({
       <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Pay Contractor</DialogTitle>
+            <DialogTitle>
+              {selectedContractor ? "Pay Contractor" : "Pay Rent"}
+            </DialogTitle>
             <DialogDescription>
-              {selectedContractor && (
+              {selectedContractor ? (
                 <>
                   Pay {selectedContractor.name} for{" "}
                   {selectedContractor.jobTitle}
                 </>
+              ) : (
+                <>Make your rent payment using your preferred payment method</>
               )}
             </DialogDescription>
           </DialogHeader>
@@ -642,7 +656,20 @@ const RentTracker = ({
             >
               Cancel
             </Button>
-            <Button onClick={handlePayContractor}>Process Payment</Button>
+            <Button
+              onClick={
+                selectedContractor
+                  ? handlePayContractor
+                  : () => {
+                      alert(
+                        `Payment of ${formatCurrency(pendingRent)} processed via ${paymentMethod === "bank" ? `Bank Transfer (${bankName}, ${accountNumber})` : `Mobile Money (${mobileProvider}, ${mobileNumber})`}`,
+                      );
+                      setIsPaymentDialogOpen(false);
+                    }
+              }
+            >
+              Process Payment
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

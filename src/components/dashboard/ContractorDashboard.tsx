@@ -24,6 +24,7 @@ import {
   CreditCard,
   Building,
   Smartphone,
+  Star,
 } from "lucide-react";
 import {
   Dialog,
@@ -46,6 +47,8 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import RatingStars from "@/components/rating/RatingStars";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Payment {
   id: string;
@@ -118,6 +121,9 @@ const ContractorDashboard = ({
   const [accountNumber, setAccountNumber] = useState("");
   const [mobileProvider, setMobileProvider] = useState("airtel");
   const [mobileNumber, setMobileNumber] = useState("");
+  const [showRatingDialog, setShowRatingDialog] = useState(false);
+  const [landlordRating, setLandlordRating] = useState(0);
+  const [ratingComment, setRatingComment] = useState("");
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-ZM", {
@@ -136,6 +142,14 @@ const ContractorDashboard = ({
       }`,
     );
     setIsPaymentDetailsOpen(false);
+  };
+
+  const handleRateLandlord = (paymentId: string) => {
+    const payment = payments.find((p) => p.id === paymentId);
+    if (payment) {
+      setSelectedPayment(payment);
+      setShowRatingDialog(true);
+    }
   };
 
   return (
@@ -195,7 +209,7 @@ const ContractorDashboard = ({
               </div>
               <div>
                 <p className="text-sm text-gray-500">This Month</p>
-                <p className="text-2xl font-bold">$2,450</p>
+                <p className="text-2xl font-bold">{formatCurrency(2450)}</p>
               </div>
             </Card>
           </div>
@@ -356,7 +370,7 @@ const ContractorDashboard = ({
                               <span>Property: {payment.property}</span>
                             </div>
                           </div>
-                          <div>
+                          <div className="flex flex-col items-end gap-2">
                             {payment.status === "pending" ? (
                               <Badge
                                 variant="secondary"
@@ -371,6 +385,17 @@ const ContractorDashboard = ({
                               >
                                 Received
                               </Badge>
+                            )}
+                            {payment.status === "received" && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleRateLandlord(payment.id)}
+                                className="flex items-center gap-1"
+                              >
+                                <Star className="h-4 w-4" />
+                                Rate Landlord
+                              </Button>
                             )}
                           </div>
                         </div>
@@ -586,6 +611,73 @@ const ContractorDashboard = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Landlord Rating Dialog */}
+      <Dialog open={showRatingDialog} onOpenChange={setShowRatingDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rate the Landlord</DialogTitle>
+            <DialogDescription>
+              Please rate your experience working with the landlord for this
+              job.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Job: {selectedPayment?.jobTitle}</Label>
+              <p className="text-sm text-gray-500">
+                Property: {selectedPayment?.property}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="rating">Rating</Label>
+              <RatingStars
+                rating={landlordRating}
+                onRatingChange={setLandlordRating}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="comment">Comments (Optional)</Label>
+              <Textarea
+                id="comment"
+                placeholder="Share your experience working with this landlord..."
+                value={ratingComment}
+                onChange={(e) => setRatingComment(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowRatingDialog(false);
+              }}
+            >
+              Skip
+            </Button>
+            <Button
+              onClick={() => {
+                console.log(
+                  `Rated landlord ${landlordRating} stars with comment: ${ratingComment}`,
+                );
+                setShowRatingDialog(false);
+                setLandlordRating(0);
+                setRatingComment("");
+                alert(
+                  "Thank you for your feedback! Your rating has been submitted.",
+                );
+              }}
+            >
+              Submit Rating
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Footer */}
+      <footer className="bg-gray-100 border-t p-4 text-center text-sm text-gray-500">
+        <p>© 2025 RealtyPlus. All rights reserved.</p>
+      </footer>
     </div>
   );
 };
