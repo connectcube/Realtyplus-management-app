@@ -15,6 +15,7 @@ import TenantManagement from "@/components/tenant/TenantManagement";
 import MaintenanceRequestManager from "@/components/maintenance/MaintenanceRequestManager";
 import RentTracker from "@/components/payment/RentTracker";
 import MessageCenter from "@/components/communication/MessageCenter";
+import { useStore } from "@/lib/zustand";
 
 interface LandlordDashboardProps {
   landlordName?: string;
@@ -32,7 +33,7 @@ const LandlordDashboard = ({
   unreadMessages = 3,
 }: LandlordDashboardProps) => {
   const [activeTab, setActiveTab] = useState("properties");
-
+  const { userName, role, email, uid, id, phone } = useStore();
   return (
     <div className="flex flex-col h-full min-h-screen bg-gray-50">
       {/* Header */}
@@ -55,7 +56,7 @@ const LandlordDashboard = ({
               <div className="h-8 w-8 rounded-full bg-red-700 flex items-center justify-center">
                 <User className="h-5 w-5" />
               </div>
-              <span className="hidden sm:inline">{landlordName}</span>
+              <span className="hidden sm:inline capitilize">{userName}</span>
             </div>
             <Button variant="ghost" size="icon">
               <Settings className="h-5 w-5" />
@@ -121,7 +122,7 @@ const LandlordDashboard = ({
         <Tabs
           value={activeTab}
           onValueChange={setActiveTab}
-          className="bg-white rounded-lg shadow"
+          className="bg-white rounded-lg shadow h-fit"
         >
           <TabsList className="w-full justify-start border-b p-0 rounded-t-lg overflow-x-auto flex-nowrap">
             <TabsTrigger

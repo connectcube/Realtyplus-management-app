@@ -31,6 +31,8 @@ import {
   SelectValue,
 } from "../ui/select";
 import { LockIcon, MailIcon, UserIcon } from "lucide-react";
+import userRegistration from "./auth-helpers/register";
+import login from "./auth-helpers/login";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -64,8 +66,9 @@ const registerSchema = z
 type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
-const LoginForm = () => {
+const LoginForm = ({ userType }: { userType: "landlord" | "tenant" | "contractor" }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("login");
   const navigate = useNavigate();
 
   const loginForm = useForm<LoginFormValues>({
@@ -73,7 +76,7 @@ const LoginForm = () => {
     defaultValues: {
       email: "",
       password: "",
-      userType: "tenant",
+      userType,
     },
   });
 
@@ -84,17 +87,17 @@ const LoginForm = () => {
       email: "",
       password: "",
       confirmPassword: "",
-      userType: "tenant",
+      userType,
     },
   });
 
-  const onLoginSubmit = (values: LoginFormValues) => {
-    setIsLoading(true);
+  const onLoginSubmit = async (values: LoginFormValues) => {
+    const loginResult = await login(setIsLoading, values);
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
       // Redirect to appropriate dashboard based on user type
-      switch (values.userType) {
+      switch (loginResult) {
         case "landlord":
           navigate("/landlord-dashboard");
           console.log("Landlord login successful:", values);
@@ -113,29 +116,11 @@ const LoginForm = () => {
     }, 1500);
   };
 
-  const onRegisterSubmit = (values: RegisterFormValues) => {
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      // Redirect to appropriate dashboard based on user type
-      switch (values.userType) {
-        case "landlord":
-          navigate("/landlord-dashboard");
-          console.log("Landlord registration successful:", values);
-          break;
-        case "tenant":
-          navigate("/tenant-dashboard");
-          console.log("Tenant registration successful:", values);
-          break;
-        case "contractor":
-          navigate("/contractor-dashboard");
-          console.log("Contractor registration successful:", values);
-          break;
-        default:
-          navigate("/tenant-dashboard");
-      }
-    }, 1500);
+  const onRegisterSubmit = async (values: RegisterFormValues) => {
+    const result = await userRegistration(setIsLoading, values);
+    if (result === "/login") {
+      setActiveTab("login"); // Switch to login tab after successful registration
+    }
   };
 
   return (
@@ -149,7 +134,7 @@ const LoginForm = () => {
             Login or create an account to continue
           </CardDescription>
         </CardHeader>
-        <Tabs defaultValue="login" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-[100%-12px] mx-3">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">Login</TabsTrigger>
             <TabsTrigger value="register">Register</TabsTrigger>
@@ -197,31 +182,6 @@ const LoginForm = () => {
                           />
                         </div>
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={loginForm.control}
-                  name="userType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>I am a</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select user type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="tenant">Tenant</SelectItem>
-                          <SelectItem value="landlord">Landlord</SelectItem>
-                          <SelectItem value="contractor">Contractor</SelectItem>
-                        </SelectContent>
-                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
