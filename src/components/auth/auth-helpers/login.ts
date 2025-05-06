@@ -4,7 +4,7 @@ import { collection, query, where, getDocs } from "firebase/firestore";
 import { useStore } from "@/lib/zustand";
 
 const login = async (setIsLoading, formData) => {
-  const updateProfile = useStore.getState().updateProfile;
+  const updateProfile = useStore.getState().setUser;
   console.log("Login attempt started for:", formData.email);
   try {
     setIsLoading(true);
@@ -48,8 +48,8 @@ const login = async (setIsLoading, formData) => {
           console.log("User data:", userData);
 
           updateProfile({
-            userName: userData.full_name,
-            role: userData.role,
+            userName: `${userData.firstName} ${userData.lastName}`,
+            role: userType,
             email: userData.email,
             uid: userData.uid,
             id: querySnapshot.docs[0].id, // Firestore document ID

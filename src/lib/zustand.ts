@@ -1,31 +1,55 @@
 import { create } from "zustand";
 
-// Define the store state type
-interface UserState {
+// Define the user type
+interface User {
   userName: string | null;
   role: string | null;
   email: string | null;
   uid: string | null;
   id: string | null;
   phone: string | null;
-  updateProfile: (profile: Omit<UserState, "updateProfile">) => void;
+  properties?: any | null;
+  tenants?: any | null;
+  messages?: any | null;
+  requests?: any | null;
+  notifications?: notifications;
+  maintenance?: any | null;
+}
+type notifications = {
+  messages: [];
+  requests: [];
+};
+
+// Define the store state type
+interface UserState {
+  user: User | null;
+  setUser: (userData: Partial<User>) => void;
 }
 
 // Create the store
 export const useStore = create<UserState>((set) => ({
-  userName: null,
-  role: null,
-  email: null,
-  uid: null,
-  id: null,
-  phone: null,
-  updateProfile: (profile) =>
-    set(() => ({
-      userName: profile.userName,
-      role: profile.role,
-      email: profile.email,
-      uid: profile.uid,
-      id: profile.id,
-      phone: profile.phone,
+  user: {
+    userName: null,
+    role: null,
+    email: null,
+    uid: null,
+    id: null,
+    phone: null,
+    properties: [],
+    tenants: [],
+    messages: [],
+    maintenance: [],
+    notifications: {
+      messages: [],
+      requests: [],
+    },
+    requests: null,
+  },
+  setUser: (userData) =>
+    set((state) => ({
+      user: {
+        ...state.user,
+        ...userData,
+      },
     })),
 }));
