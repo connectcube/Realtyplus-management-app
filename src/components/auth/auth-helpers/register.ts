@@ -1,8 +1,9 @@
 import { auth, fireDataBase } from "@/lib/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
+import { toast } from "react-toastify";
 
-const userRegistration = async (setIsLoading, formData) => {
+const userRegistration = async (setIsLoading, formData, setTab) => {
   try {
     setIsLoading(true);
 
@@ -16,46 +17,65 @@ const userRegistration = async (setIsLoading, formData) => {
       throw new Error("Missing required fields");
     }
 
-    // Sign up with Firebase Auth
-    const userCredential = await createUserWithEmailAndPassword(
-      auth,
-      formData.email,
-      formData.password
-    );
+    // Check if a user is already authenticated
+    const currentUser = auth.currentUser;
+    let userId;
 
-    if (userCredential.user) {
-      // Create a user profile in Firestore
-      const userDocRef = doc(
-        fireDataBase,
-        formData.userType,
-        userCredential.user.uid
+    if (currentUser) {
+      // User is already authenticated, use their existing UID
+      userId = currentUser.uid;
+      toast("Seems like you already registered, login instead.");
+      setTab("login");
+    } else {
+      // No user is authenticated, create a new account
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
       );
-
-      // User data to store in Firestore
-      const userData = {
-        uid: userCredential.user.uid,
-        full_name: formData.name,
-        email: formData.email,
-        phone: formData.phone || "NA",
-        role: formData.userType,
-        createdAt: new Date(),
-      };
-
-      try {
-        // Add user to Firestore collection based on user type
-        await setDoc(userDocRef, userData);
-      } catch (profileError) {
-        console.error("Profile creation error:", profileError);
-        // Delete the auth user if profile creation fails
-        await userCredential.user.delete();
-        return null;
-      }
-
-      // Sign out the user after registration
-      await auth.signOut();
-
-      return "/login"; // return route string to redirect to login page
+      userId = userCredential.user.uid;
+      console.log("Created new user account:", userId);
     }
+
+    // Create a user profile in Firestore
+    const userDocRef = doc(fireDataBase, `${formData.userType}s`, userId);
+
+    // User data to store in Firestore
+    const userData = {
+      uid: userId,
+      full_name: formData.name,
+      email: formData.email,
+      phone: formData.phone || "NA",
+      role: formData.userType,
+      createdAt: new Date(),
+    };
+
+    try {
+      // Add user to Firestore collection based on user type
+      await setDoc(userDocRef, userData);
+      console.log("User profile created successfully");
+    } catch (profileError) {
+      console.error("Profile creation error:", profileError);
+
+      // Only delete the auth user if we created a new one
+      if (!currentUser) {
+        // Get the current user again to ensure we have the latest reference
+        const userToDelete = auth.currentUser;
+        if (userToDelete) {
+          await userToDelete.delete();
+          console.log("Deleted user account due to profile creation failure");
+        }
+      }
+      return null;
+    }
+
+    // Only sign out if we want the user to log in again
+    // You might want to keep them signed in depending on your app flow
+    if (!currentUser) {
+      await auth.signOut();
+    }
+
+    return "/login"; // return route string to redirect to login page
   } catch (error) {
     console.error("Error signing up:", error);
     throw error;

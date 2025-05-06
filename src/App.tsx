@@ -10,10 +10,11 @@ import MaintenanceRequestManager from "./components/maintenance/MaintenanceReque
 import MaintenanceRequestForm from "./components/maintenance/MaintenanceRequestForm";
 import TenantManagement from "./components/tenant/TenantManagement";
 import routes from "tempo-routes";
-
+import { ToastContainer } from "react-toastify";
 function App() {
   return (
     <Suspense fallback={<p>Loading...</p>}>
+      <ToastContainer />
       <>
         {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
         <Routes>

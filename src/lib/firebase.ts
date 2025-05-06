@@ -27,8 +27,8 @@ const firebaseConfig = {
   projectId: "realtyplus-listings",
   storageBucket: "realtyplus-listings.firebasestorage.app",
   messagingSenderId: "850002092915",
-  appId: "1:850002092915:web:79338847a9d307298e9b06",
-  measurementId: "G-V8JVZWZJ1F",
+  appId: "1:850002092915:web:abe238c05ca1917a8e9b06",
+  measurementId: "G-MLCXESPZZ9",
 };
 // Initialize Firebase app
 const firebaseApp = initializeApp(firebaseConfig);

@@ -33,7 +33,6 @@ import {
 import { LockIcon, MailIcon, UserIcon } from "lucide-react";
 import userRegistration from "./auth-helpers/register";
 import login from "./auth-helpers/login";
-
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
   password: z
@@ -66,7 +65,11 @@ const registerSchema = z
 type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
-const LoginForm = ({ userType }: { userType: "landlord" | "tenant" | "contractor" }) => {
+const LoginForm = ({
+  userType,
+}: {
+  userType: "landlord" | "tenant" | "contractor";
+}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
   const navigate = useNavigate();
@@ -117,25 +120,29 @@ const LoginForm = ({ userType }: { userType: "landlord" | "tenant" | "contractor
   };
 
   const onRegisterSubmit = async (values: RegisterFormValues) => {
-    const result = await userRegistration(setIsLoading, values);
+    const result = await userRegistration(setIsLoading, values, setActiveTab);
     if (result === "/login") {
       setActiveTab("login"); // Switch to login tab after successful registration
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <Card className="w-full max-w-md bg-white shadow-lg rounded-lg">
+    <div className="flex justify-center items-center bg-gray-50 min-h-screen">
+      <Card className="bg-white shadow-lg rounded-lg w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
+          <CardTitle className="font-bold text-2xl text-center">
             RealtyPlus
           </CardTitle>
           <CardDescription className="text-center">
             Login or create an account to continue
           </CardDescription>
         </CardHeader>
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-[100%-12px] mx-3">
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="mx-3 w-[100%-12px]"
+        >
+          <TabsList className="grid grid-cols-2 w-full">
             <TabsTrigger value="login">Login</TabsTrigger>
             <TabsTrigger value="register">Register</TabsTrigger>
           </TabsList>
@@ -153,7 +160,7 @@ const LoginForm = ({ userType }: { userType: "landlord" | "tenant" | "contractor
                       <FormLabel>Email</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <MailIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <MailIcon className="top-3 left-3 absolute w-4 h-4 text-gray-400" />
                           <Input
                             placeholder="email@example.com"
                             className="pl-10"
@@ -173,7 +180,7 @@ const LoginForm = ({ userType }: { userType: "landlord" | "tenant" | "contractor
                       <FormLabel>Password</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <LockIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <LockIcon className="top-3 left-3 absolute w-4 h-4 text-gray-400" />
                           <Input
                             type="password"
                             placeholder="******"
@@ -206,7 +213,7 @@ const LoginForm = ({ userType }: { userType: "landlord" | "tenant" | "contractor
                       <FormLabel>Full Name</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <UserIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <UserIcon className="top-3 left-3 absolute w-4 h-4 text-gray-400" />
                           <Input
                             placeholder="John Doe"
                             className="pl-10"
@@ -226,7 +233,7 @@ const LoginForm = ({ userType }: { userType: "landlord" | "tenant" | "contractor
                       <FormLabel>Email</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <MailIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <MailIcon className="top-3 left-3 absolute w-4 h-4 text-gray-400" />
                           <Input
                             placeholder="email@example.com"
                             className="pl-10"
@@ -246,7 +253,7 @@ const LoginForm = ({ userType }: { userType: "landlord" | "tenant" | "contractor
                       <FormLabel>Password</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <LockIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <LockIcon className="top-3 left-3 absolute w-4 h-4 text-gray-400" />
                           <Input
                             type="password"
                             placeholder="******"
@@ -267,7 +274,7 @@ const LoginForm = ({ userType }: { userType: "landlord" | "tenant" | "contractor
                       <FormLabel>Confirm Password</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <LockIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                          <LockIcon className="top-3 left-3 absolute w-4 h-4 text-gray-400" />
                           <Input
                             type="password"
                             placeholder="******"
@@ -313,7 +320,7 @@ const LoginForm = ({ userType }: { userType: "landlord" | "tenant" | "contractor
           </TabsContent>
         </Tabs>
         <CardFooter className="flex flex-col space-y-2 p-6 pt-0">
-          <div className="text-xs text-center text-gray-500">
+          <div className="text-gray-500 text-xs text-center">
             By continuing, you agree to our Terms of Service and Privacy Policy.
           </div>
         </CardFooter>

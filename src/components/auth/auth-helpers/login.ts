@@ -17,7 +17,7 @@ const login = async (setIsLoading, formData) => {
 
     if (userCredential.user) {
       // 2. Check each user type collection for the user's ID
-      const userTypes = ["landlord", "tenant", "contractor"];
+      const userTypes = ["landlords", "tenants", "contractor"];
 
       for (const userType of userTypes) {
         // Query Firestore for the user
