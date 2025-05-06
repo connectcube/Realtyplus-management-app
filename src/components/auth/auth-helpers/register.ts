@@ -1,6 +1,6 @@
 import { auth, fireDataBase } from "@/lib/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { toast } from "react-toastify";
 
 const userRegistration = async (setIsLoading, formData, setTab) => {
@@ -24,8 +24,25 @@ const userRegistration = async (setIsLoading, formData, setTab) => {
     if (currentUser) {
       // User is already authenticated, use their existing UID
       userId = currentUser.uid;
+
+      // Check if document already exists for this user
+      const userDocRef = doc(fireDataBase, `${formData.userType}s`, userId);
+      const docSnap = await getDoc(userDocRef);
+
+      if (!docSnap.exists()) {
+        // Document doesn't exist, create one with just the UID
+        await setDoc(userDocRef, {
+          uid: userId,
+          role: formData.userType,
+          createdAt: new Date(),
+        });
+        console.log("Created minimal user profile for existing auth user");
+      } else {
+        console.log("User document already exists, no action needed");
+      }
       toast("Seems like you already registered, login instead.");
       setTab("login");
+      return "/login";
     } else {
       // No user is authenticated, create a new account
       const userCredential = await createUserWithEmailAndPassword(
