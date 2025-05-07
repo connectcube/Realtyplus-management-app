@@ -50,14 +50,16 @@ import { onAuthStateChanged } from "firebase/auth";
 
 interface Property {
   id: string;
-  name: string;
+  title: string;
   address: string;
-  type: "apartment" | "house" | "condo" | "commercial";
+  propertyType: "apartment" | "house" | "condo" | "commercial";
   units: number;
   occupiedUnits: number;
   monthlyRevenue: number;
   maintenanceRequests: number;
+  images: [string];
   image: string;
+  coverPhotoIndex: number;
 }
 
 interface PropertyOverviewProps {
@@ -134,7 +136,9 @@ const PropertyOverview = ({
   const filteredProperties =
     activeTab === "all"
       ? displayProperties
-      : displayProperties.filter((property) => property.type === activeTab);
+      : displayProperties.filter(
+          (property) => property.propertyType === activeTab
+        );
 
   const totalProperties = userProperties.length || 0;
   const totalUnits = displayProperties.reduce(
@@ -701,7 +705,7 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
             property.image ||
             (property.images && property.images[property.coverPhotoIndex])
           }
-          alt={property.name || property.title}
+          alt={property.title}
           className="w-full h-full object-cover hover:scale-105 transition-transform"
           onError={(e) => {
             e.currentTarget.src =
@@ -712,9 +716,7 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <CardTitle className="text-xl">{property.title || ""}</CardTitle>
-          <Badge
-            variant={getBadgeVariant(property.type || property.propertyType)}
-          >
+          <Badge variant={getBadgeVariant(property.propertyType)}>
             {property.propertyType || ""}
           </Badge>
         </div>
@@ -770,7 +772,7 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
   );
 };
 
-const getBadgeVariant = (type: Property["type"]) => {
+const getBadgeVariant = (type: Property["propertyType"]) => {
   switch (type) {
     case "apartment":
       return "default";
@@ -788,17 +790,18 @@ const getBadgeVariant = (type: Property["type"]) => {
 const defaultProperties: Property[] = [
   {
     id: "1",
-    name: "Sunset Apartments",
+    title: "Sunset Apartments",
     address: "123 Main St, Anytown, CA 90210",
-    type: "apartment",
+    propertyType: "apartment",
     units: 24,
     occupiedUnits: 22,
     monthlyRevenue: 28500,
     maintenanceRequests: 3,
     image:
       "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80",
+    images: [""],
+    coverPhotoIndex: 0,
   },
-  // ... other default properties
 ];
 
 export default PropertyOverview;
