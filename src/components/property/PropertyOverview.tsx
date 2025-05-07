@@ -47,6 +47,7 @@ import {
 } from "firebase/firestore";
 import { auth, fireDataBase } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import UserSelector from "../user-selector/UserSelector";
 
 interface Property {
   id: string;
@@ -338,6 +339,7 @@ const PropertyDialog = ({
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(false);
   const [error, setError] = useState("");
+  const [selectedUsers, setSelectedUsers] = useState([]);
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -620,6 +622,16 @@ const PropertyDialog = ({
               className="col-span-1 sm:col-span-3"
             />
           </div>
+          <div className="items-center gap-2 grid grid-cols-1 sm:grid-cols-4">
+            <Label htmlFor="tenants" className="sm:text-right">
+              Link Tenants
+            </Label>
+            <UserSelector
+              onUserSelect={setSelectedUsers}
+              selectedUsers={selectedUsers}
+            />
+          </div>
+
           <div className="items-center gap-2 grid grid-cols-1 sm:grid-cols-4">
             <Label htmlFor="image" className="sm:text-right">
               Image URL
