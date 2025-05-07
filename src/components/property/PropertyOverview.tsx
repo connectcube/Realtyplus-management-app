@@ -475,7 +475,7 @@ const PropertyDialog = ({
       const newProperty = {
         id: Date.now().toString(),
         name: property.title || property.name,
-        type: property.propertyType || property.type,
+        propertyType: property.propertyType || property.type,
         address: property.address || "",
         units: property.units || 1,
         occupiedUnits: 0,
@@ -717,7 +717,7 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
         <div className="flex justify-between items-start">
           <CardTitle className="text-xl">{property.title || ""}</CardTitle>
           <Badge variant={getBadgeVariant(property.propertyType)}>
-            {property.propertyType || ""}
+            {property.propertyType}
           </Badge>
         </div>
         <CardDescription className="flex items-center">

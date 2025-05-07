@@ -1,4 +1,11 @@
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+
+// Define the notifications type correctly
+type Notifications = {
+  messages: any[];
+  requests: any[];
+};
 
 // Define the user type
 interface User {
@@ -8,48 +15,57 @@ interface User {
   uid: string | null;
   id: string | null;
   phone: string | null;
-  properties?: any | null;
-  tenants?: any | null;
-  messages?: any | null;
-  requests?: any | null;
-  notifications?: notifications;
-  maintenance?: any | null;
+  properties: any[];
+  tenants: any[];
+  messages: any[];
+  requests: any;
+  notifications: Notifications;
+  maintenance: any[];
 }
-type notifications = {
-  messages: [];
-  requests: [];
-};
 
 // Define the store state type
 interface UserState {
-  user: User | null;
+  user: User;
   setUser: (userData: Partial<User>) => void;
+  clearUser: () => void;
 }
 
-// Create the store
-export const useStore = create<UserState>((set) => ({
-  user: {
-    userName: null,
-    role: null,
-    email: null,
-    uid: null,
-    id: null,
-    phone: null,
-    properties: [],
-    tenants: [],
+// Initial state
+const initialState: User = {
+  userName: null,
+  role: null,
+  email: null,
+  uid: null,
+  id: null,
+  phone: null,
+  properties: [],
+  tenants: [],
+  messages: [],
+  maintenance: [],
+  notifications: {
     messages: [],
-    maintenance: [],
-    notifications: {
-      messages: [],
-      requests: [],
-    },
-    requests: null,
+    requests: [],
   },
-  setUser: (userData) =>
-    set((state) => ({
-      user: {
-        ...state.user,
-        ...userData,
-      },
-    })),
-}));
+  requests: null,
+};
+
+// Create the store with persistence
+export const useStore = create<UserState>()(
+  persist(
+    (set) => ({
+      user: initialState,
+      setUser: (userData) =>
+        set((state) => ({
+          user: {
+            ...state.user,
+            ...userData,
+          },
+        })),
+      clearUser: () => set({ user: initialState }),
+    }),
+    {
+      name: "realtyplus-user-storage",
+      storage: createJSONStorage(() => localStorage),
+    }
+  )
+);
