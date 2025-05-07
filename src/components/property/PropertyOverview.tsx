@@ -15,7 +15,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,6 +31,7 @@ import {
   Calendar,
   Edit,
   Trash2,
+  Loader2,
 } from "lucide-react";
 import { useStore } from "@/lib/zustand";
 import {
@@ -45,7 +45,8 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
-import { fireDataBase } from "@/lib/firebase";
+import { auth, fireDataBase } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
 
 interface Property {
   id: string;
@@ -66,39 +67,124 @@ interface PropertyOverviewProps {
 const PropertyOverview = ({
   properties = defaultProperties,
 }: PropertyOverviewProps) => {
-  const { user } = useStore();
+  const { user, setUser } = useStore();
   const [isAddPropertyDialogOpen, setIsAddPropertyDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
+  const [isLoading, setIsLoading] = useState(true);
+  const [userProperties, setUserProperties] = useState<Property[]>([]);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  // Check authentication state on component mount
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setAuthChecked(true);
+      if (!currentUser) {
+        // User is not logged in
+        setIsLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Fetch user properties when user data is available
+  useEffect(() => {
+    const fetchUserProperties = async () => {
+      if (!user.uid || !authChecked) return;
+
+      try {
+        setIsLoading(true);
+
+        // First check if user has properties in their state
+        if (user.properties && user.properties.length > 0) {
+          setUserProperties(user.properties);
+          setIsLoading(false);
+          return;
+        }
+
+        // If not, fetch from Firestore
+        if (user.role) {
+          const userDocRef = doc(fireDataBase, user.role, user.uid);
+          const userDoc = await getDoc(userDocRef);
+
+          if (userDoc.exists() && userDoc.data().properties) {
+            const fetchedProperties = userDoc.data().properties;
+            setUserProperties(fetchedProperties);
+
+            // Update user state with fetched properties
+            setUser({
+              properties: fetchedProperties,
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user properties:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserProperties();
+  }, [user.uid, authChecked, user.role, setUser]);
+
+  // Use user properties if available, otherwise use default properties
+  const displayProperties =
+    userProperties.length > 0 ? userProperties : properties;
 
   const filteredProperties =
     activeTab === "all"
-      ? properties
-      : properties.filter((property) => property.type === activeTab);
+      ? displayProperties
+      : displayProperties.filter((property) => property.type === activeTab);
 
-  const totalProperties = user.properties.length || 0;
-  const totalUnits = properties.reduce(
-    (sum, property) => sum + property.units,
+  const totalProperties = userProperties.length || 0;
+  const totalUnits = displayProperties.reduce(
+    (sum, property) => sum + (property.units || 0),
     0
   );
   const occupancyRate =
     totalUnits > 0
       ? Math.round(
-          (properties.reduce(
-            (sum, property) => sum + property.occupiedUnits,
+          (displayProperties.reduce(
+            (sum, property) => sum + (property.occupiedUnits || 0),
             0
           ) /
             totalUnits) *
             100
         )
       : 0;
-  const totalRevenue = properties.reduce(
-    (sum, property) => sum + property.monthlyRevenue,
+  const totalRevenue = displayProperties.reduce(
+    (sum, property) => sum + (property.monthlyRevenue || 0),
     0
   );
-  const totalMaintenanceRequests = properties.reduce(
-    (sum, property) => sum + property.maintenanceRequests,
+  const totalMaintenanceRequests = displayProperties.reduce(
+    (sum, property) => sum + (property.maintenanceRequests || 0),
     0
   );
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center p-6 w-full h-full">
+        <div className="text-center">
+          <Loader2 className="mx-auto w-8 h-8 text-primary animate-spin" />
+          <p className="mt-2 text-muted-foreground">Loading properties...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user.uid && authChecked) {
+    return (
+      <div className="bg-white shadow-sm p-6 rounded-lg w-full h-full">
+        <div className="py-8 text-center">
+          <h2 className="mb-2 font-bold text-xl">Login Required</h2>
+          <p className="mb-4 text-muted-foreground">
+            Please log in to view and manage your properties.
+          </p>
+          <Button>Go to Login</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white shadow-sm p-6 rounded-lg w-full h-full">
@@ -194,11 +280,24 @@ const PropertyOverview = ({
         </TabsList>
 
         <TabsContent value={activeTab} className="mt-0">
-          <div className="gap-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {filteredProperties.map((property) => (
-              <PropertyCard key={property.id} property={property} />
-            ))}
-          </div>
+          {filteredProperties.length === 0 ? (
+            <div className="py-8 text-center">
+              <p className="text-muted-foreground">No properties found.</p>
+              <Button
+                variant="outline"
+                className="mt-4"
+                onClick={() => setIsAddPropertyDialogOpen(true)}
+              >
+                <Plus className="mr-2 w-4 h-4" /> Add Your First Property
+              </Button>
+            </div>
+          ) : (
+            <div className="gap-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+              {filteredProperties.map((property) => (
+                <PropertyCard key={property.id} property={property} />
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 
@@ -206,6 +305,9 @@ const PropertyOverview = ({
       <PropertyDialog
         setIsAddPropertyDialogOpen={setIsAddPropertyDialogOpen}
         isAddPropertyDialogOpen={isAddPropertyDialogOpen}
+        onPropertyAdded={(newProperty) => {
+          setUserProperties([...userProperties, newProperty]);
+        }}
       />
     </div>
   );
@@ -218,17 +320,19 @@ interface PropertyCardProps {
 const PropertyDialog = ({
   setIsAddPropertyDialogOpen,
   isAddPropertyDialogOpen,
+  onPropertyAdded,
 }) => {
   const { user, setUser } = useStore();
   const [formData, setFormData] = useState({
-    title: "",
-    propertyType: "apartment",
+    name: "",
+    type: "apartment",
     address: "",
     units: 1,
     image: "",
   });
   const [fetchedProperties, setFetchedProperties] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleChange = (e) => {
@@ -285,10 +389,17 @@ const PropertyDialog = ({
         await updateDoc(userDocRef, {
           properties: arrayUnion(newProperty),
         });
+
         // Update local state
+        const updatedProperties = [...(user.properties || []), newProperty];
         setUser({
-          properties: [...(user.properties || []), newProperty],
+          properties: updatedProperties,
         });
+
+        // Notify parent component
+        if (onPropertyAdded) {
+          onPropertyAdded(newProperty);
+        }
 
         setIsAddPropertyDialogOpen(false);
         setFormData({
@@ -313,9 +424,10 @@ const PropertyDialog = ({
 
   // Function to fetch user's properties
   const fetchUserProperties = async () => {
-    console.log(user);
     try {
       if (!user.uid) return;
+
+      setFetchLoading(true);
 
       // Query properties where postedByDetails.uid matches current user's uid
       const propertiesQuery = query(
@@ -337,31 +449,76 @@ const PropertyDialog = ({
     } catch (error) {
       console.error("Error fetching user properties:", error);
       return [];
+    } finally {
+      setFetchLoading(false);
     }
   };
+
   useEffect(() => {
     fetchUserProperties();
   }, [user.uid]);
 
   const handlePropertyClick = async (property) => {
-    const userRef = doc(fireDataBase, `${user.role}s`, user.uid);
-    await updateDoc(userRef, {
-      properties: arrayUnion({
-        title: property.title,
-        propertyType: property.propertyType,
-        image: property.images[property.coverPhotoIndex],
-      }),
-    });
-    setFormData({
-      title: "",
-      propertyType: "apartment",
-      address: "",
-      units: 1,
-      image: "",
-    });
+    try {
+      setLoading(true);
 
-    setIsAddPropertyDialogOpen(false);
+      if (!user.uid || !user.role) {
+        setError("You must be logged in to add properties");
+        return;
+      }
+
+      const userRef = doc(fireDataBase, `${user.role}s`, user.uid);
+
+      const newProperty = {
+        id: Date.now().toString(),
+        name: property.title || property.name,
+        type: property.propertyType || property.type,
+        address: property.address || "",
+        units: property.units || 1,
+        occupiedUnits: 0,
+        monthlyRevenue: 0,
+        maintenanceRequests: 0,
+        image:
+          property.images?.[property.coverPhotoIndex] || property.image || "",
+        postedByDetails: {
+          uid: user.uid,
+          userName: user.userName,
+        },
+        createdAt: new Date().toISOString(),
+      };
+
+      await updateDoc(userRef, {
+        properties: arrayUnion(newProperty),
+      });
+
+      // Update local state
+      const updatedProperties = [...(user.properties || []), newProperty];
+      setUser({
+        properties: updatedProperties,
+      });
+
+      // Notify parent component
+      if (onPropertyAdded) {
+        onPropertyAdded(newProperty);
+      }
+
+      setFormData({
+        name: "",
+        type: "apartment",
+        address: "",
+        units: 1,
+        image: "",
+      });
+
+      setIsAddPropertyDialogOpen(false);
+    } catch (err) {
+      console.error("Error adding existing property:", err);
+      setError("Failed to add property. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
+
   return (
     <Dialog
       open={isAddPropertyDialogOpen}
@@ -380,20 +537,30 @@ const PropertyDialog = ({
           </div>
         )}
 
-        {fetchedProperties && fetchedProperties.length > 0 && (
-          <div className="mb-4">
-            <h3 className="mb-2 font-medium text-sm">Your posted properties</h3>
-            <div className="p-2 border border-input rounded-md max-h-[200px] overflow-y-auto">
-              {fetchedProperties.map((property) => (
-                <div key={property.uid} className="mb-2 last:mb-0">
-                  <SimplePropertyCard
-                    property={property}
-                    onClick={() => handlePropertyClick(property)}
-                  />
-                </div>
-              ))}
-            </div>
+        {fetchLoading ? (
+          <div className="flex justify-center items-center py-4">
+            <Loader2 className="w-6 h-6 text-primary animate-spin" />
+            <span className="ml-2">Loading your properties...</span>
           </div>
+        ) : (
+          fetchedProperties &&
+          fetchedProperties.length > 0 && (
+            <div className="mb-4">
+              <h3 className="mb-2 font-medium text-sm">
+                Your posted properties
+              </h3>
+              <div className="p-2 border border-input rounded-md max-h-[200px] overflow-y-auto">
+                {fetchedProperties.map((property) => (
+                  <div key={property.uid} className="mb-2 last:mb-0">
+                    <SimplePropertyCard
+                      property={property}
+                      onClick={() => handlePropertyClick(property)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
         )}
 
         <div className="gap-4 grid py-4">
@@ -405,7 +572,7 @@ const PropertyDialog = ({
               id="name"
               placeholder="Property name"
               className="col-span-1 sm:col-span-3"
-              value={formData.title}
+              value={formData.name}
               onChange={handleChange}
             />
           </div>
@@ -416,7 +583,7 @@ const PropertyDialog = ({
             <select
               id="type"
               className="flex col-span-1 sm:col-span-3 bg-background file:bg-transparent disabled:opacity-50 px-3 py-2 border border-input file:border-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-offset-background focus-visible:ring-offset-2 w-full h-10 file:font-medium placeholder:text-muted-foreground text-sm file:text-sm disabled:cursor-not-allowed"
-              value={formData.propertyType}
+              value={formData.type}
               onChange={handleChange}
             >
               <option value="apartment">Apartment</option>
@@ -477,13 +644,21 @@ const PropertyDialog = ({
             disabled={loading}
             className="w-full sm:w-auto"
           >
-            {loading ? "Saving..." : "Save Property"}
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save Property"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 };
+
 const SimplePropertyCard = ({ property, onClick }) => {
   return (
     <div className="flex items-center gap-3 hover:bg-accent/10 p-2 border border-border rounded-md transition-colors">
@@ -506,14 +681,14 @@ const SimplePropertyCard = ({ property, onClick }) => {
 
       {/* Property Name */}
       <div className="flex-grow overflow-hidden">
-        <h4 className="font-medium text-sm truncate">
-          {property.name || property.title}
-        </h4>
+        <h4 className="font-medium text-sm truncate">{property.title || ""}</h4>
         <p className="text-muted-foreground text-xs truncate">
-          {property.type || property.propertyType}
+          {property.propertyType || ""}
         </p>
       </div>
-      <button onClick={onClick}>Add this </button>
+      <Button size="sm" variant="outline" onClick={onClick}>
+        Add
+      </Button>
     </div>
   );
 };
@@ -523,16 +698,25 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
     <Card className="overflow-hidden">
       <div className="h-48 overflow-hidden">
         <img
-          src={property.image || property.images[property.coverPhotoIndex]}
-          alt={property.title}
+          src={
+            property.image ||
+            (property.images && property.images[property.coverPhotoIndex])
+          }
+          alt={property.name || property.title}
           className="w-full h-full object-cover hover:scale-105 transition-transform"
+          onError={(e) => {
+            e.currentTarget.src =
+              "https://via.placeholder.com/800x400?text=No+Image";
+          }}
         />
       </div>
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
-          <CardTitle className="text-xl">{property.title}</CardTitle>
-          <Badge variant={getBadgeVariant(property.propertyType)}>
-            {property.propertyType}
+          <CardTitle className="text-xl">{property.title || ""}</CardTitle>
+          <Badge
+            variant={getBadgeVariant(property.type || property.propertyType)}
+          >
+            {property.propertyType || ""}
           </Badge>
         </div>
         <CardDescription className="flex items-center">
@@ -552,7 +736,8 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
             <p className="font-medium">
               {property.units > 0
                 ? Math.round(
-                    (property.occupiedUnits || 0 / property.units || 1) * 100
+                    ((property.occupiedUnits || 0) / (property.units || 1)) *
+                      100
                   )
                 : 0}
               %
@@ -614,66 +799,7 @@ const defaultProperties: Property[] = [
     image:
       "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80",
   },
-  {
-    id: "2",
-    name: "Lakeside Condos",
-    address: "456 Lake Ave, Waterfront, FL 33101",
-    type: "condo",
-    units: 12,
-    occupiedUnits: 10,
-    monthlyRevenue: 18000,
-    maintenanceRequests: 1,
-    image:
-      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80",
-  },
-  {
-    id: "3",
-    name: "Downtown Office Building",
-    address: "789 Business Blvd, Metro City, NY 10001",
-    type: "commercial",
-    units: 8,
-    occupiedUnits: 6,
-    monthlyRevenue: 42000,
-    maintenanceRequests: 2,
-    image:
-      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80",
-  },
-  {
-    id: "4",
-    name: "Greenview Homes",
-    address: "321 Park Lane, Greenville, TX 75401",
-    type: "house",
-    units: 5,
-    occupiedUnits: 5,
-    monthlyRevenue: 12500,
-    maintenanceRequests: 0,
-    image:
-      "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80",
-  },
-  {
-    id: "5",
-    name: "Riverfront Apartments",
-    address: "555 River Rd, Riverside, OR 97201",
-    type: "apartment",
-    units: 18,
-    occupiedUnits: 15,
-    monthlyRevenue: 22500,
-    maintenanceRequests: 4,
-    image:
-      "https://images.unsplash.com/photo-1460317442991-0ec209397118?w=800&q=80",
-  },
-  {
-    id: "6",
-    name: "Mountain View Cabins",
-    address: "888 Mountain Pass, Highland, CO 80461",
-    type: "house",
-    units: 8,
-    occupiedUnits: 6,
-    monthlyRevenue: 16000,
-    maintenanceRequests: 2,
-    image:
-      "https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?w=800&q=80",
-  },
+  // ... other default properties
 ];
 
 export default PropertyOverview;
