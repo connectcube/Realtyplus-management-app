@@ -443,7 +443,6 @@ const PropertyDialog = ({
 
       // Update user state with fetched properties
       setFetchedProperties(userProperties);
-      console.log("Fetched user properties:", userProperties);
 
       return userProperties;
     } catch (error) {
@@ -466,8 +465,8 @@ const PropertyDialog = ({
         setError("You must be logged in to add properties");
         return;
       }
-
-      const userRef = doc(fireDataBase, `${user.role}s`, user.uid);
+      console.log(user);
+      const userRef = doc(fireDataBase, user.role, user.uid);
 
       const newProperty = {
         id: Date.now().toString(),
