@@ -383,6 +383,12 @@ const PropertyDialog = ({
           uid: user.uid,
           userName: user.userName,
         },
+        tenants: selectedUsers.map((user) => ({
+          uid: user.uid,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+        })),
         createdAt: new Date().toISOString(),
       };
 

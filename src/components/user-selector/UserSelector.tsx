@@ -64,6 +64,7 @@ const UserSelector = ({
   }, []);
 
   // Filter users based on search query
+  // Filter users based on search query
   useEffect(() => {
     if (searchQuery.trim() === "") {
       setFilteredUsers(users);
@@ -71,7 +72,8 @@ const UserSelector = ({
       const query = searchQuery.toLowerCase();
       const filtered = users.filter(
         (user) =>
-          user.displayName?.toLowerCase().includes(query) ||
+          user.firstName?.toLowerCase().includes(query) ||
+          user.lastName?.toLowerCase().includes(query) ||
           user.email?.toLowerCase().includes(query)
       );
       setFilteredUsers(filtered);
@@ -136,14 +138,15 @@ const UserSelector = ({
                     {user.photoURL ? (
                       <img
                         src={user.photoURL}
-                        alt={user.displayName || "User"}
+                        alt={`${user.firstName} ${user.lastName}` || "User"}
                       />
                     ) : (
                       <div className="flex justify-center items-center bg-primary w-full h-full font-medium text-primary-foreground text-sm">
-                        {user.displayName?.[0] || user.email?.[0] || "U"}
+                        {user.firstName?.[0] || user.email?.[0] || "U"}
                       </div>
                     )}
                   </Avatar>
+
                   <div className="flex-grow">
                     <p className="font-medium text-sm">
                       {`${user.firstName} ${user.lastName}` || "Unnamed User"}
@@ -179,7 +182,7 @@ const UserSelector = ({
                 variant="secondary"
                 className="flex items-center gap-1"
               >
-                {user.displayName || user.email}
+                {`${user.firstName} ${user.lastName}` || user.email}
                 <X
                   className="w-3 h-3 cursor-pointer"
                   onClick={() => handleUserRemove(user.uid)}
