@@ -38,7 +38,7 @@ const login = async (setIsLoading, formData) => {
           querySnapshot.size,
           "documents found"
         );
-
+        console.log("User found in collection:", querySnapshot);
         if (!querySnapshot.empty) {
           // User found in this collection
           const userData = querySnapshot.docs[0].data();

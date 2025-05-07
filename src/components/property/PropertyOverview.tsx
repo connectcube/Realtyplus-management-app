@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -33,6 +33,19 @@ import {
   Edit,
   Trash2,
 } from "lucide-react";
+import { useStore } from "@/lib/zustand";
+import {
+  addDoc,
+  arrayUnion,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  updateDoc,
+  where,
+} from "firebase/firestore";
+import { fireDataBase } from "@/lib/firebase";
 
 interface Property {
   id: string;
@@ -53,7 +66,8 @@ interface PropertyOverviewProps {
 const PropertyOverview = ({
   properties = defaultProperties,
 }: PropertyOverviewProps) => {
-  const [isAddPropertyDialogOpen, setIsAddPropertyDialogOpen] = useState(true);
+  const { user } = useStore();
+  const [isAddPropertyDialogOpen, setIsAddPropertyDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
 
   const filteredProperties =
@@ -61,109 +75,109 @@ const PropertyOverview = ({
       ? properties
       : properties.filter((property) => property.type === activeTab);
 
-  const totalProperties = properties.length;
+  const totalProperties = user.properties.length || 0;
   const totalUnits = properties.reduce(
     (sum, property) => sum + property.units,
-    0,
+    0
   );
   const occupancyRate =
     totalUnits > 0
       ? Math.round(
           (properties.reduce(
             (sum, property) => sum + property.occupiedUnits,
-            0,
+            0
           ) /
             totalUnits) *
-            100,
+            100
         )
       : 0;
   const totalRevenue = properties.reduce(
     (sum, property) => sum + property.monthlyRevenue,
-    0,
+    0
   );
   const totalMaintenanceRequests = properties.reduce(
     (sum, property) => sum + property.maintenanceRequests,
-    0,
+    0
   );
 
   return (
-    <div className="w-full h-full bg-white p-6 rounded-lg shadow-sm">
+    <div className="bg-white shadow-sm p-6 rounded-lg w-full h-full">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-2xl font-bold">Property Overview</h2>
+          <h2 className="font-bold text-2xl">Property Overview</h2>
           <p className="text-muted-foreground">
             Manage and monitor your properties
           </p>
         </div>
         <Button onClick={() => setIsAddPropertyDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Add Property
+          <Plus className="mr-2 w-4 h-4" /> Add Property
         </Button>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+      <div className="gap-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 mb-6">
         <Card>
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+            <div className="flex justify-between items-center">
               <div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Total Properties
                 </p>
-                <p className="text-2xl font-bold">{totalProperties}</p>
+                <p className="font-bold text-2xl">{totalProperties}</p>
               </div>
-              <Building className="h-8 w-8 text-primary opacity-80" />
+              <Building className="opacity-80 w-8 h-8 text-primary" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+            <div className="flex justify-between items-center">
               <div>
-                <p className="text-sm text-muted-foreground">Total Units</p>
-                <p className="text-2xl font-bold">{totalUnits}</p>
+                <p className="text-muted-foreground text-sm">Total Units</p>
+                <p className="font-bold text-2xl">{totalUnits}</p>
               </div>
-              <Home className="h-8 w-8 text-primary opacity-80" />
+              <Home className="opacity-80 w-8 h-8 text-primary" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+            <div className="flex justify-between items-center">
               <div>
-                <p className="text-sm text-muted-foreground">Occupancy Rate</p>
-                <p className="text-2xl font-bold">{occupancyRate}%</p>
+                <p className="text-muted-foreground text-sm">Occupancy Rate</p>
+                <p className="font-bold text-2xl">{occupancyRate}%</p>
               </div>
-              <Users className="h-8 w-8 text-primary opacity-80" />
+              <Users className="opacity-80 w-8 h-8 text-primary" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+            <div className="flex justify-between items-center">
               <div>
-                <p className="text-sm text-muted-foreground">Monthly Revenue</p>
-                <p className="text-2xl font-bold">
+                <p className="text-muted-foreground text-sm">Monthly Revenue</p>
+                <p className="font-bold text-2xl">
                   ZMW {totalRevenue.toLocaleString()}
                 </p>
               </div>
-              <DollarSign className="h-8 w-8 text-primary opacity-80" />
+              <DollarSign className="opacity-80 w-8 h-8 text-primary" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+            <div className="flex justify-between items-center">
               <div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Maintenance Requests
                 </p>
-                <p className="text-2xl font-bold">{totalMaintenanceRequests}</p>
+                <p className="font-bold text-2xl">{totalMaintenanceRequests}</p>
               </div>
-              <Calendar className="h-8 w-8 text-primary opacity-80" />
+              <Calendar className="opacity-80 w-8 h-8 text-primary" />
             </div>
           </CardContent>
         </Card>
@@ -180,7 +194,7 @@ const PropertyOverview = ({
         </TabsList>
 
         <TabsContent value={activeTab} className="mt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="gap-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {filteredProperties.map((property) => (
               <PropertyCard key={property.id} property={property} />
             ))}
@@ -189,89 +203,10 @@ const PropertyOverview = ({
       </Tabs>
 
       {/* Add Property Dialog */}
-      <Dialog
-        open={isAddPropertyDialogOpen}
-        onOpenChange={setIsAddPropertyDialogOpen}
-      >
-        <DialogContent className="sm:max-w-[525px]">
-          <DialogHeader>
-            <DialogTitle>Add New Property</DialogTitle>
-            <DialogDescription>
-              Enter the details of your new property. Click save when you're
-              done.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Name
-              </Label>
-              <Input
-                id="name"
-                placeholder="Property name"
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="type" className="text-right">
-                Type
-              </Label>
-              <select
-                id="type"
-                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="apartment">Apartment</option>
-                <option value="house">House</option>
-                <option value="condo">Condo</option>
-                <option value="commercial">Commercial</option>
-              </select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="address" className="text-right">
-                Address
-              </Label>
-              <Textarea
-                id="address"
-                placeholder="Full address"
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="units" className="text-right">
-                Units
-              </Label>
-              <Input
-                id="units"
-                type="number"
-                min="1"
-                defaultValue="1"
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="image" className="text-right">
-                Image URL
-              </Label>
-              <Input
-                id="image"
-                placeholder="Property image URL"
-                className="col-span-3"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsAddPropertyDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={() => setIsAddPropertyDialogOpen(false)}>
-              Save Property
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <PropertyDialog
+        setIsAddPropertyDialogOpen={setIsAddPropertyDialogOpen}
+        isAddPropertyDialogOpen={isAddPropertyDialogOpen}
+      />
     </div>
   );
 };
@@ -280,68 +215,371 @@ interface PropertyCardProps {
   property: Property;
 }
 
+const PropertyDialog = ({
+  setIsAddPropertyDialogOpen,
+  isAddPropertyDialogOpen,
+}) => {
+  const { user, setUser } = useStore();
+  const [formData, setFormData] = useState({
+    title: "",
+    propertyType: "apartment",
+    address: "",
+    units: 1,
+    image: "",
+  });
+  const [fetchedProperties, setFetchedProperties] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleChange = (e) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [id]: id === "units" ? parseInt(value) : value,
+    }));
+  };
+
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      if (!formData.name || !formData.address) {
+        setError("Name and address are required");
+        setLoading(false);
+        return;
+      }
+
+      if (!user.uid) {
+        setError("You must be logged in to add properties");
+        setLoading(false);
+        return;
+      }
+
+      // Create a new property object
+      const newProperty = {
+        id: Date.now().toString(),
+        name: formData.name,
+        type: formData.type,
+        address: formData.address,
+        units: formData.units,
+        occupiedUnits: 0,
+        monthlyRevenue: 0,
+        maintenanceRequests: 0,
+        image:
+          formData.image ||
+          "https://images.unsplash.com/photo-1460317442991-0ec209397118?w=800&q=80",
+        postedByDetails: {
+          uid: user.uid,
+          userName: user.userName,
+        },
+        createdAt: new Date().toISOString(),
+      };
+
+      // First, check if the user document exists in Firestore
+      const userDocRef = doc(fireDataBase, user.role, user.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists()) {
+        // Add the property to the user's properties array
+        await updateDoc(userDocRef, {
+          properties: arrayUnion(newProperty),
+        });
+        // Update local state
+        setUser({
+          properties: [...(user.properties || []), newProperty],
+        });
+
+        setIsAddPropertyDialogOpen(false);
+        setFormData({
+          name: "",
+          type: "apartment",
+          address: "",
+          units: 1,
+          image: "",
+        });
+      } else {
+        setError(
+          "User profile not found. Please complete your profile setup first."
+        );
+      }
+    } catch (err) {
+      console.error("Error adding property:", err);
+      setError("Failed to add property. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to fetch user's properties
+  const fetchUserProperties = async () => {
+    console.log(user);
+    try {
+      if (!user.uid) return;
+
+      // Query properties where postedByDetails.uid matches current user's uid
+      const propertiesQuery = query(
+        collection(fireDataBase, "listings"),
+        where("postedByDetails.uid", "==", user.uid)
+      );
+
+      const querySnapshot = await getDocs(propertiesQuery);
+      const userProperties = querySnapshot.docs.map((doc) => ({
+        uid: doc.id,
+        ...doc.data(),
+      }));
+
+      // Update user state with fetched properties
+      setFetchedProperties(userProperties);
+      console.log("Fetched user properties:", userProperties);
+
+      return userProperties;
+    } catch (error) {
+      console.error("Error fetching user properties:", error);
+      return [];
+    }
+  };
+  useEffect(() => {
+    fetchUserProperties();
+  }, [user.uid]);
+
+  const handlePropertyClick = async (property) => {
+    const userRef = doc(fireDataBase, `${user.role}s`, user.uid);
+    await updateDoc(userRef, {
+      properties: arrayUnion({
+        title: property.title,
+        propertyType: property.propertyType,
+        image: property.images[property.coverPhotoIndex],
+      }),
+    });
+    setFormData({
+      title: "",
+      propertyType: "apartment",
+      address: "",
+      units: 1,
+      image: "",
+    });
+
+    setIsAddPropertyDialogOpen(false);
+  };
+  return (
+    <Dialog
+      open={isAddPropertyDialogOpen}
+      onOpenChange={setIsAddPropertyDialogOpen}
+    >
+      <DialogContent className="max-w-[95vw] sm:max-w-[525px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Add New Property</DialogTitle>
+          <DialogDescription>
+            Enter the details of your new property. Click save when you're done.
+          </DialogDescription>
+        </DialogHeader>
+        {error && (
+          <div className="bg-destructive/10 p-3 rounded-md text-destructive text-sm">
+            {error}
+          </div>
+        )}
+
+        {fetchedProperties && fetchedProperties.length > 0 && (
+          <div className="mb-4">
+            <h3 className="mb-2 font-medium text-sm">Your posted properties</h3>
+            <div className="p-2 border border-input rounded-md max-h-[200px] overflow-y-auto">
+              {fetchedProperties.map((property) => (
+                <div key={property.uid} className="mb-2 last:mb-0">
+                  <SimplePropertyCard
+                    property={property}
+                    onClick={() => handlePropertyClick(property)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="gap-4 grid py-4">
+          <div className="items-center gap-2 grid grid-cols-1 sm:grid-cols-4">
+            <Label htmlFor="name" className="sm:text-right">
+              Name
+            </Label>
+            <Input
+              id="name"
+              placeholder="Property name"
+              className="col-span-1 sm:col-span-3"
+              value={formData.title}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="items-center gap-2 grid grid-cols-1 sm:grid-cols-4">
+            <Label htmlFor="type" className="sm:text-right">
+              Type
+            </Label>
+            <select
+              id="type"
+              className="flex col-span-1 sm:col-span-3 bg-background file:bg-transparent disabled:opacity-50 px-3 py-2 border border-input file:border-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-offset-background focus-visible:ring-offset-2 w-full h-10 file:font-medium placeholder:text-muted-foreground text-sm file:text-sm disabled:cursor-not-allowed"
+              value={formData.propertyType}
+              onChange={handleChange}
+            >
+              <option value="apartment">Apartment</option>
+              <option value="house">House</option>
+              <option value="condo">Condo</option>
+              <option value="commercial">Commercial</option>
+            </select>
+          </div>
+          <div className="items-center gap-2 grid grid-cols-1 sm:grid-cols-4">
+            <Label htmlFor="address" className="sm:text-right">
+              Address
+            </Label>
+            <Textarea
+              id="address"
+              placeholder="Full address"
+              className="col-span-1 sm:col-span-3"
+              value={formData.address}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="items-center gap-2 grid grid-cols-1 sm:grid-cols-4">
+            <Label htmlFor="units" className="sm:text-right">
+              Units
+            </Label>
+            <Input
+              id="units"
+              type="number"
+              min="1"
+              value={formData.units}
+              onChange={handleChange}
+              className="col-span-1 sm:col-span-3"
+            />
+          </div>
+          <div className="items-center gap-2 grid grid-cols-1 sm:grid-cols-4">
+            <Label htmlFor="image" className="sm:text-right">
+              Image URL
+            </Label>
+            <Input
+              id="image"
+              placeholder="Property image URL"
+              className="col-span-1 sm:col-span-3"
+              value={formData.image}
+              onChange={handleChange}
+            />
+          </div>
+        </div>
+        <DialogFooter className="sm:flex-row flex-col gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setIsAddPropertyDialogOpen(false)}
+            disabled={loading}
+            className="w-full sm:w-auto"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="w-full sm:w-auto"
+          >
+            {loading ? "Saving..." : "Save Property"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+const SimplePropertyCard = ({ property, onClick }) => {
+  return (
+    <div className="flex items-center gap-3 hover:bg-accent/10 p-2 border border-border rounded-md transition-colors">
+      {/* Cover Image - Square thumbnail */}
+      <div className="flex-shrink-0 rounded-md w-16 h-16 overflow-hidden">
+        <img
+          src={
+            property.image ||
+            property.images?.[property.coverPhotoIndex] ||
+            "https://via.placeholder.com/150"
+          }
+          alt={property.name || property.title}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            e.currentTarget.src =
+              "https://via.placeholder.com/150?text=No+Image";
+          }}
+        />
+      </div>
+
+      {/* Property Name */}
+      <div className="flex-grow overflow-hidden">
+        <h4 className="font-medium text-sm truncate">
+          {property.name || property.title}
+        </h4>
+        <p className="text-muted-foreground text-xs truncate">
+          {property.type || property.propertyType}
+        </p>
+      </div>
+      <button onClick={onClick}>Add this </button>
+    </div>
+  );
+};
+
 const PropertyCard = ({ property }: PropertyCardProps) => {
   return (
     <Card className="overflow-hidden">
       <div className="h-48 overflow-hidden">
         <img
-          src={property.image}
-          alt={property.name}
-          className="w-full h-full object-cover transition-transform hover:scale-105"
+          src={property.image || property.images[property.coverPhotoIndex]}
+          alt={property.title}
+          className="w-full h-full object-cover hover:scale-105 transition-transform"
         />
       </div>
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
-          <CardTitle className="text-xl">{property.name}</CardTitle>
-          <Badge variant={getBadgeVariant(property.type)}>
-            {property.type}
+          <CardTitle className="text-xl">{property.title}</CardTitle>
+          <Badge variant={getBadgeVariant(property.propertyType)}>
+            {property.propertyType}
           </Badge>
         </div>
         <CardDescription className="flex items-center">
-          <MapPin className="h-4 w-4 mr-1" /> {property.address}
+          <MapPin className="mr-1 w-4 h-4" /> {property.address}
         </CardDescription>
       </CardHeader>
       <CardContent className="pb-2">
-        <div className="grid grid-cols-2 gap-2 text-sm">
+        <div className="gap-2 grid grid-cols-2 text-sm">
           <div>
             <p className="text-muted-foreground">Units</p>
             <p className="font-medium">
-              {property.occupiedUnits}/{property.units}
+              {property.occupiedUnits || 0}/{property.units || 1}
             </p>
           </div>
           <div>
             <p className="text-muted-foreground">Occupancy</p>
             <p className="font-medium">
               {property.units > 0
-                ? Math.round((property.occupiedUnits / property.units) * 100)
+                ? Math.round(
+                    (property.occupiedUnits || 0 / property.units || 1) * 100
+                  )
                 : 0}
               %
             </p>
           </div>
           <div>
             <p className="text-muted-foreground">Monthly Revenue</p>
-            <p className="font-medium">
-              ZMW {property.monthlyRevenue.toLocaleString()}
-            </p>
+            <p className="font-medium">ZMW {property.monthlyRevenue || 0}</p>
           </div>
           <div>
             <p className="text-muted-foreground">Maintenance</p>
             <p className="font-medium">
-              {property.maintenanceRequests} requests
+              {property.maintenanceRequests || 0} requests
             </p>
           </div>
         </div>
       </CardContent>
       <CardFooter className="flex justify-end gap-2">
         <Button variant="outline" size="sm">
-          <Edit className="h-4 w-4 mr-1" /> Edit
+          <Edit className="mr-1 w-4 h-4" /> Edit
         </Button>
         <Button
           variant="outline"
           size="sm"
-          className="text-destructive hover:bg-destructive/10"
+          className="hover:bg-destructive/10 text-destructive"
         >
-          <Trash2 className="h-4 w-4 mr-1" /> Delete
+          <Trash2 className="mr-1 w-4 h-4" /> Delete
         </Button>
       </CardFooter>
     </Card>
