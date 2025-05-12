@@ -12,7 +12,7 @@ import {Input} from "../ui/input";
 import {Label} from "../ui/label";
 import {Tabs, TabsContent, TabsList, TabsTrigger} from "../ui/tabs";
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "../ui/card";
-import {Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger} from "../ui/dialog";
+import {Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle} from "../ui/dialog";
 import {Avatar, AvatarFallback, AvatarImage} from "../ui/avatar";
 import {Switch} from "../ui/switch";
 
@@ -73,7 +73,7 @@ export default function Settings() {
          });
       } else {
          // Redirect to login if no user
-         navigate("/login");
+         navigate("/");
       }
    }, [user, navigate]);
 
