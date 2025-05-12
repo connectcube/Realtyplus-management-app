@@ -45,9 +45,10 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
-import { auth, fireDataBase } from "@/lib/firebase";
+import { auth, fireDataBase, fireStorage } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import UserSelector from "../user-selector/UserSelector";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 
 interface Property {
   id: string;
@@ -340,7 +341,39 @@ const PropertyDialog = ({
   const [fetchLoading, setFetchLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedUsers, setSelectedUsers] = useState([]);
-
+  const [imageUploading, setImageUploading] = useState(false);
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    try {
+      setImageUploading(true);
+      
+      // Create a reference to the storage location
+      const storageRef = ref(
+        fireStorage, 
+        `management-app/listings-image/${user.uid}/${Date.now()}-${file.name}`
+      );
+      
+      // Upload the file
+      await uploadBytes(storageRef, file);
+      
+      // Get the download URL
+      const downloadURL = await getDownloadURL(storageRef);
+      
+      // Update form data with the download URL
+      setFormData(prev => ({
+        ...prev,
+        image: downloadURL
+      }));
+      
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      setError("Failed to upload image. Please try again.");
+    } finally {
+      setImageUploading(false);
+    }
+  };
   const handleChange = (e) => {
     const { id, value } = e.target;
     setFormData((prev) => ({
@@ -639,17 +672,46 @@ const PropertyDialog = ({
           </div>
 
           <div className="items-center gap-2 grid grid-cols-1 sm:grid-cols-4">
-            <Label htmlFor="image" className="sm:text-right">
-              Image URL
-            </Label>
-            <Input
-              id="image"
-              placeholder="Property image URL"
-              className="col-span-1 sm:col-span-3"
-              value={formData.image}
-              onChange={handleChange}
-            />
-          </div>
+  <Label htmlFor="image" className="sm:text-right">
+    Property Image
+  </Label>
+  <div className="space-y-2 col-span-1 sm:col-span-3">
+    <div className="flex items-center gap-2">
+      <Input
+        id="imageUpload"
+        type="file"
+        accept="image/*"
+        onChange={handleImageUpload}
+        className="flex-1"
+      />
+      {imageUploading && (
+        <div className="flex items-center">
+          <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+          <span className="text-xs">Uploading...</span>
+        </div>
+      )}
+    </div>
+    {formData.image && (
+      <div className="mt-2">
+        <div className="relative rounded-md w-full max-w-[200px] h-[100px] overflow-hidden">
+          <img 
+            src={formData.image} 
+            alt="Property preview" 
+            className="w-full h-full object-cover"
+          />
+        </div>
+      </div>
+    )}
+    <Input
+      id="image"
+      placeholder="Or enter image URL manually"
+      className="mt-2"
+      value={formData.image}
+      onChange={handleChange}
+    />
+  </div>
+</div>
+
         </div>
         <DialogFooter className="sm:flex-row flex-col gap-2">
           <Button
