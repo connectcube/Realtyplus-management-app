@@ -59,11 +59,10 @@ const Header = ({onMenuToggle = () => {}}: HeaderProps) => {
                   <Menu className="w-6 h-6" />
                </Button>
                <Link to="/" className="flex justify-center items-center gap-2">
-                  <div className="bg-white rounded-full size-1"></div>
+                  <div className="bg-white size-1 srounded-full"></div>
                   <h1 className="font-bold text-xl">RealtyPlus</h1>
                </Link>
             </div>
-
             <div className="flex items-center gap-4">
                <Button
                   variant="ghost"
