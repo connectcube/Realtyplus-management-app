@@ -48,7 +48,7 @@ import {
 import { auth, fireDataBase, fireStorage } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import UserSelector from "../user-selector/UserSelector";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { deleteObject, getDownloadURL, ref, uploadBytes } from "firebase/storage";
 
 interface Property {
   id: string;
@@ -342,6 +342,8 @@ const PropertyDialog = ({
   const [error, setError] = useState("");
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [imageUploading, setImageUploading] = useState(false);
+  const [uploadedImageRef, setUploadedImageRef] = useState(null);
+
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -357,6 +359,9 @@ const PropertyDialog = ({
       
       // Upload the file
       await uploadBytes(storageRef, file);
+      
+      // Store the reference for potential deletion
+      setUploadedImageRef(storageRef);
       
       // Get the download URL
       const downloadURL = await getDownloadURL(storageRef);
@@ -374,6 +379,7 @@ const PropertyDialog = ({
       setImageUploading(false);
     }
   };
+  
   const handleChange = (e) => {
     const { id, value } = e.target;
     setFormData((prev) => ({
@@ -562,11 +568,43 @@ const PropertyDialog = ({
       setLoading(false);
     }
   };
-
+const handleDialogClose = async () => {
+  // Check if we have an uploaded image that needs to be deleted
+  if (uploadedImageRef && formData.image) {
+    try {
+      // Delete the image from Firebase Storage
+      await deleteObject(uploadedImageRef);
+      console.log("Uploaded image deleted successfully");
+    } catch (error) {
+      console.error("Error deleting uploaded image:", error);
+    }
+  }
+  
+  // Reset form data
+  setFormData({
+    name: "",
+    type: "apartment",
+    address: "",
+    units: 1,
+    image: "",
+  });
+  
+  // Reset uploaded image reference
+  setUploadedImageRef(null);
+  
+  // Close the dialog
+  setIsAddPropertyDialogOpen(false);
+};
   return (
     <Dialog
       open={isAddPropertyDialogOpen}
-      onOpenChange={setIsAddPropertyDialogOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          handleDialogClose();
+        } else {
+          setIsAddPropertyDialogOpen(true);
+        }
+      }}
     >
       <DialogContent className="max-w-[95vw] sm:max-w-[525px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -714,14 +752,14 @@ const PropertyDialog = ({
 
         </div>
         <DialogFooter className="sm:flex-row flex-col gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setIsAddPropertyDialogOpen(false)}
-            disabled={loading}
-            className="w-full sm:w-auto"
-          >
-            Cancel
-          </Button>
+        <Button
+          variant="outline"
+          onClick={handleDialogClose}
+          disabled={loading}
+          className="w-full sm:w-auto"
+           >
+             Cancel
+        </Button>
           <Button
             onClick={handleSubmit}
             disabled={loading}
