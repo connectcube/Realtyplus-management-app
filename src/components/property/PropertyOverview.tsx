@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import {useEffect, useState} from "react";
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
 import {Button} from "@/components/ui/button";
 import {Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle} from "@/components/ui/dialog";
@@ -9,12 +9,11 @@ import {Textarea} from "@/components/ui/textarea";
 import {Badge} from "@/components/ui/badge";
 import {Building, Home, Plus, MapPin, Users, DollarSign, Calendar, Edit, Trash2, Loader2} from "lucide-react";
 import {useStore} from "@/lib/zustand";
-import {addDoc, arrayUnion, collection, doc, getDoc, getDocs, onSnapshot, query, updateDoc, where} from "firebase/firestore";
+import {arrayUnion, collection, doc, getDoc, onSnapshot, query, updateDoc, where} from "firebase/firestore";
 import {auth, fireDataBase, fireStorage} from "@/lib/firebase";
 import {onAuthStateChanged} from "firebase/auth";
 import UserSelector from "../user-selector/UserSelector";
 import {deleteObject, getDownloadURL, ref, uploadBytes} from "firebase/storage";
-
 interface Property {
    id: string;
    title: string;
@@ -28,11 +27,9 @@ interface Property {
    image: string;
    coverPhotoIndex: number;
 }
-
 interface PropertyOverviewProps {
    properties?: Property[];
 }
-
 const PropertyOverview = ({properties = defaultProperties}: PropertyOverviewProps) => {
    const {user, setUser} = useStore();
    const [isAddPropertyDialogOpen, setIsAddPropertyDialogOpen] = useState(false);
@@ -40,17 +37,13 @@ const PropertyOverview = ({properties = defaultProperties}: PropertyOverviewProp
    const [isLoading, setIsLoading] = useState(true);
    const [userProperties, setUserProperties] = useState<Property[]>([]);
    const [authChecked, setAuthChecked] = useState(false);
-
-   // Check authentication state on component mount
    useEffect(() => {
       const unsubscribe = onAuthStateChanged(auth, currentUser => {
          setAuthChecked(true);
          if (!currentUser) {
-            // User is not logged in
             setIsLoading(false);
          }
       });
-
       return () => unsubscribe();
    }, []);
    const handlePropertyUpdated = updatedProperty => {
