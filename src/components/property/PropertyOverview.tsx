@@ -837,6 +837,37 @@ const EditPropertyDialog = ({property, isOpen, onOpenChange, onPropertyUpdated})
                   properties: updatedProperties
                });
 
+               // Update tenant documents with property information
+               if (selectedUsers && selectedUsers.length > 0) {
+                  // Create a simplified property object for tenants
+                  const tenantPropertyInfo = {
+                     id: updatedProperty.id,
+                     name: updatedProperty.name,
+                     address: updatedProperty.address,
+                     type: updatedProperty.type,
+                     image: updatedProperty.image,
+                     landlordId: user.uid,
+                     landlordName: user.userName || user.firstName + " " + user.lastName,
+                     updatedAt: updatedProperty.updatedAt
+                  };
+
+                  // Update each tenant's document
+                  for (const tenant of selectedUsers) {
+                     if (tenant.uid) {
+                        const tenantDocRef = doc(fireDataBase, "tenants", tenant.uid);
+
+                        // Get the tenant's document
+                        const tenantDoc = await getDoc(tenantDocRef);
+
+                        if (tenantDoc.exists()) {
+                           await updateDoc(tenantDocRef, {
+                              property: tenantPropertyInfo
+                           });
+                        }
+                     }
+                  }
+               }
+
                // Notify parent component
                if (onPropertyUpdated) {
                   onPropertyUpdated(updatedProperty);

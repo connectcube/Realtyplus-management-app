@@ -33,6 +33,7 @@ const ProtectedRoute = ({children, allowedRoles = [], redirectTo = "/"}) => {
 };
 
 function App() {
+   const user = useStore(state => state.user);
    return (
       <AuthProvider>
          <Suspense fallback={<p>Loading...</p>}>
@@ -51,7 +52,7 @@ function App() {
                      path="/tenant-dashboard"
                      element={
                         <ProtectedRoute allowedRoles={["tenants"]} redirectTo="/tenant">
-                           <TenantDashboard />
+                           <TenantDashboard tenantName={user.userName || ""} propertyAddress={user.address} />
                         </ProtectedRoute>
                      }
                   />

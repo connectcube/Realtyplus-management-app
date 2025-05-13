@@ -61,7 +61,7 @@ const userRegistration = async (setIsLoading, formData, setTab) => {
       };
 
       try {
-         // Add user to Firestore collection based on user type
+         // Add user to Firestore collectionas
          await setDoc(userDocRef, userData);
          console.log("User profile created successfully");
       } catch (profileError) {
