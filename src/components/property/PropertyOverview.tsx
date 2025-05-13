@@ -351,15 +351,8 @@ const PropertyDialog = ({setIsAddPropertyDialogOpen, isAddPropertyDialogOpen, on
                userName: user.userName,
                role: user.role
             },
-            tenants: selectedUsers.map(user => ({
-               uid: user.uid,
-               firstName: user.firstName,
-               lastName: user.lastName,
-               email: user.email
-            })),
             createdAt: new Date().toISOString()
          };
-
          // First, check if the user document exists in Firestore
          const userDocRef = doc(fireDataBase, user.role, user.uid);
          const userDoc = await getDoc(userDocRef);
@@ -368,23 +361,9 @@ const PropertyDialog = ({setIsAddPropertyDialogOpen, isAddPropertyDialogOpen, on
             // 1. Add the property to the listings-managementApp collection
             const listingRef = await addDoc(collection(fireDataBase, "listings-managementApp"), newProperty);
 
-            // Get the ID of the newly created document
-            const listingId = listingRef.id;
-
-            // Create a reference object to store in the user document
-            const propertyRef = {
-               id: newProperty.id,
-               listingId: listingId,
-               name: newProperty.name,
-               type: newProperty.type,
-               address: newProperty.address,
-               image: newProperty.image,
-               createdAt: newProperty.createdAt
-            };
-
             // 2. Add the property reference to the user's properties array
             await updateDoc(userDocRef, {
-               propertyRefs: arrayUnion(propertyRef)
+               propertyRefs: arrayUnion(listingRef)
             });
 
             // 3. Update tenant documents with property reference
@@ -396,16 +375,10 @@ const PropertyDialog = ({setIsAddPropertyDialogOpen, isAddPropertyDialogOpen, on
 
                      if (tenantDoc.exists()) {
                         await updateDoc(tenantDocRef, {
-                           propertyRef: {
-                              id: newProperty.id,
-                              listingId: listingId,
-                              name: newProperty.name,
-                              address: newProperty.address,
-                              type: newProperty.type,
-                              image: newProperty.image,
-                              landlordId: user.uid,
-                              landlordName: user.userName || user.firstName + " " + user.lastName
-                           }
+                           propertyRef: listingRef
+                        });
+                        await updateDoc(listingRef, {
+                           tenantRef: tenantDocRef
                         });
                      }
                   }
