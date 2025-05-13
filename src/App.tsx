@@ -52,7 +52,7 @@ function App() {
                      path="/tenant-dashboard"
                      element={
                         <ProtectedRoute allowedRoles={["tenants"]} redirectTo="/tenant">
-                           <TenantDashboard tenantName={user.userName || ""} propertyAddress={user.address} />
+                           <TenantDashboard tenantName={user.userName || ""} propertyAddress={""} />
                         </ProtectedRoute>
                      }
                   />

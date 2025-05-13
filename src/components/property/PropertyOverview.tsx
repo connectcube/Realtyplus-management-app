@@ -9,7 +9,7 @@ import {Textarea} from "@/components/ui/textarea";
 import {Badge} from "@/components/ui/badge";
 import {Building, Home, Plus, MapPin, Users, DollarSign, Calendar, Edit, Trash2, Loader2} from "lucide-react";
 import {useStore} from "@/lib/zustand";
-import {arrayUnion, collection, doc, getDoc, onSnapshot, query, updateDoc, where} from "firebase/firestore";
+import {addDoc, arrayUnion, collection, doc, getDoc, onSnapshot, query, updateDoc, where} from "firebase/firestore";
 import {auth, fireDataBase, fireStorage} from "@/lib/firebase";
 import {onAuthStateChanged} from "firebase/auth";
 import UserSelector from "../user-selector/UserSelector";
@@ -339,6 +339,7 @@ const PropertyDialog = ({setIsAddPropertyDialogOpen, isAddPropertyDialogOpen, on
             id: Date.now().toString(),
             name: formData.name,
             type: formData.type,
+            propertyType: formData.type, // Adding propertyType for consistency
             address: formData.address,
             units: formData.units,
             occupiedUnits: 0,
@@ -347,7 +348,8 @@ const PropertyDialog = ({setIsAddPropertyDialogOpen, isAddPropertyDialogOpen, on
             image: formData.image || "https://images.unsplash.com/photo-1460317442991-0ec209397118?w=800&q=80",
             postedByDetails: {
                uid: user.uid,
-               userName: user.userName
+               userName: user.userName,
+               role: user.role
             },
             tenants: selectedUsers.map(user => ({
                uid: user.uid,
@@ -363,12 +365,54 @@ const PropertyDialog = ({setIsAddPropertyDialogOpen, isAddPropertyDialogOpen, on
          const userDoc = await getDoc(userDocRef);
 
          if (userDoc.exists()) {
-            // Add the property to the user's properties array
+            // 1. Add the property to the listings-managementApp collection
+            const listingRef = await addDoc(collection(fireDataBase, "listings-managementApp"), newProperty);
+
+            // Get the ID of the newly created document
+            const listingId = listingRef.id;
+
+            // Create a reference object to store in the user document
+            const propertyRef = {
+               id: newProperty.id,
+               listingId: listingId,
+               name: newProperty.name,
+               type: newProperty.type,
+               address: newProperty.address,
+               image: newProperty.image,
+               createdAt: newProperty.createdAt
+            };
+
+            // 2. Add the property reference to the user's properties array
             await updateDoc(userDocRef, {
-               properties: arrayUnion(newProperty)
+               propertyRefs: arrayUnion(propertyRef)
             });
 
-            // Update local state
+            // 3. Update tenant documents with property reference
+            if (selectedUsers && selectedUsers.length > 0) {
+               for (const tenant of selectedUsers) {
+                  if (tenant.uid) {
+                     const tenantDocRef = doc(fireDataBase, "tenants", tenant.uid);
+                     const tenantDoc = await getDoc(tenantDocRef);
+
+                     if (tenantDoc.exists()) {
+                        await updateDoc(tenantDocRef, {
+                           propertyRef: {
+                              id: newProperty.id,
+                              listingId: listingId,
+                              name: newProperty.name,
+                              address: newProperty.address,
+                              type: newProperty.type,
+                              image: newProperty.image,
+                              landlordId: user.uid,
+                              landlordName: user.userName || user.firstName + " " + user.lastName
+                           }
+                        });
+                     }
+                  }
+               }
+            }
+
+            // Update local state - you might need to adjust this based on how you want to handle the new structure
             const updatedProperties = [...(user.properties || []), newProperty];
             setUser({
                properties: updatedProperties
@@ -851,14 +895,11 @@ const EditPropertyDialog = ({property, isOpen, onOpenChange, onPropertyUpdated})
                      updatedAt: updatedProperty.updatedAt
                   };
 
-                  // Update each tenant's document
                   for (const tenant of selectedUsers) {
                      if (tenant.uid) {
                         const tenantDocRef = doc(fireDataBase, "tenants", tenant.uid);
-
                         // Get the tenant's document
                         const tenantDoc = await getDoc(tenantDocRef);
-
                         if (tenantDoc.exists()) {
                            await updateDoc(tenantDocRef, {
                               property: tenantPropertyInfo
