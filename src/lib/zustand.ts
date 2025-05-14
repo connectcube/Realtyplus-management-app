@@ -1,3 +1,4 @@
+import {DocumentReference} from "firebase/firestore";
 import {create} from "zustand";
 import {persist, createJSONStorage} from "zustand/middleware";
 
@@ -18,6 +19,7 @@ interface User {
    id: string | null;
    phone: string | null;
    properties: any[];
+   propertyRefs: DocumentReference[];
    tenants: any[];
    messages: any[];
    requests: any;
@@ -42,6 +44,7 @@ const initialState: User = {
    uid: null,
    id: null,
    phone: null,
+   propertyRefs: [],
    properties: [],
    tenants: [],
    messages: [],

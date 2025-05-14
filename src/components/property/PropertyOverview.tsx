@@ -16,7 +16,7 @@ import UserSelector from "../user-selector/UserSelector";
 import {deleteObject, getDownloadURL, ref, uploadBytes} from "firebase/storage";
 import PropertyCard from "./PropertyCard";
 interface Property {
-   id: string;
+   uid: string;
    title: string;
    name: string;
    address: string;
@@ -50,60 +50,38 @@ const PropertyOverview = ({properties = defaultProperties}: PropertyOverviewProp
    }, []);
    const handlePropertyUpdated = updatedProperty => {
       // Update the userProperties state with the updated property
-      setUserProperties(prevProperties => prevProperties.map(prop => (prop.id === updatedProperty.id ? updatedProperty : prop)));
+      setUserProperties(prevProperties => prevProperties.map(prop => (prop.uid === updatedProperty.uid ? updatedProperty : prop)));
    };
    useEffect(() => {
-      let unsubscribe = () => {};
-
-      const fetchUserProperties = async () => {
-         if (!user.uid || !authChecked) return;
+      const fetchProperties = async () => {
+         if (!user.uid || !user.propertyRefs || user.propertyRefs.length === 0) {
+            setIsLoading(false);
+            return;
+         }
 
          try {
-            setIsLoading(true);
+            const propertyPromises = user.propertyRefs.map(async propertyRef => {
+               const propertySnap = await getDoc(propertyRef);
+               if (propertySnap.exists()) {
+                  return {
+                     uid: propertySnap.id,
+                     ...propertySnap.data()
+                  };
+               }
+               return null;
+            });
 
-            // First check if user has properties in their state
-            if (user.properties && user.properties.length > 0) {
-               setUserProperties(user.properties);
-               setIsLoading(false);
-               return;
-            }
-            if (user.role) {
-               const userDocRef = doc(fireDataBase, user.role, user.uid);
-
-               // Create a real-time listener with onSnapshot
-               unsubscribe = onSnapshot(
-                  userDocRef,
-                  docSnapshot => {
-                     if (docSnapshot.exists() && docSnapshot.data().properties) {
-                        const fetchedProperties = docSnapshot.data().properties;
-                        setUserProperties(fetchedProperties);
-
-                        // Update user state with fetched properties
-                        setUser({
-                           properties: fetchedProperties
-                        });
-                     }
-                     setIsLoading(false);
-                  },
-                  error => {
-                     console.error("Error in properties listener:", error);
-                     setIsLoading(false);
-                  }
-               );
-            }
+            const fetchedProperties = (await Promise.all(propertyPromises)).filter(Boolean);
+            setUserProperties(fetchedProperties as Property[]);
          } catch (error) {
-            console.error("Error setting up properties listener:", error);
+            console.error("Error fetching properties:", error);
+         } finally {
             setIsLoading(false);
          }
       };
 
-      fetchUserProperties();
-
-      // Clean up the listener when the component unmounts
-      return () => {
-         if (unsubscribe) unsubscribe();
-      };
-   }, [user.uid, authChecked, user.role, setUser, isAddPropertyDialogOpen, handlePropertyUpdated]);
+      fetchProperties();
+   }, [user.uid, user.propertyRefs]);
 
    const displayProperties = userProperties.length > 0 ? userProperties : properties;
 
@@ -238,7 +216,7 @@ const PropertyOverview = ({properties = defaultProperties}: PropertyOverviewProp
                ) : (
                   <div className="gap-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                      {filteredProperties.map(property => (
-                        <PropertyCard key={property.id} property={property} onPropertyUpdated={handlePropertyUpdated} />
+                        <PropertyCard key={property.uid} property={property} onPropertyUpdated={handlePropertyUpdated} />
                      ))}
                   </div>
                )}
@@ -717,7 +695,7 @@ const SimplePropertyCard = ({property, onClick}) => {
 
 const defaultProperties: Property[] = [
    {
-      id: "1",
+      uid: "1",
       title: "Sunset Apartments",
       name: "",
       address: "123 Main St, Anytown, CA 90210",

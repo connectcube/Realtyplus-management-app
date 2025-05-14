@@ -3,8 +3,8 @@ import {useStore} from "@/lib/zustand";
 import {arrayUnion, doc, getDoc, updateDoc} from "firebase/firestore";
 import {deleteObject, getDownloadURL, ref, uploadBytes} from "firebase/storage";
 import {useEffect, useState} from "react";
-import {Dialog, DialogDescription, DialogFooter, DialogHeader, DialogTitle} from "../ui/dialog";
-import {DialogContent} from "@radix-ui/react-dialog";
+import {Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle} from "../ui/dialog";
+
 import {Label} from "../ui/label";
 import {Input} from "../ui/input";
 import {Textarea} from "../ui/textarea";
@@ -114,120 +114,48 @@ const EditPropertyDialog = ({property, isOpen, onOpenChange, onPropertyUpdated})
       // Close the dialog
       onOpenChange(false);
    };
-   const handleSubmit = async () => {
-      try {
-         setLoading(true);
-         setError("");
-
-         if (!formData.name || !formData.address) {
-            setError("Name and address are required");
-            setLoading(false);
-            return;
-         }
-
-         if (!user.uid || !user.role) {
-            setError("You must be logged in to update properties");
-            setLoading(false);
-            return;
-         }
-
-         // Get the user document reference
-         const userDocRef = doc(fireDataBase, user.role, user.uid);
-         const userDoc = await getDoc(userDocRef);
-
-         if (userDoc.exists()) {
-            // Find the property reference in the user document
-            const propertyRefs = userDoc.data().propertyRefs || [];
-            const propertyRef = propertyRefs.find(
-               ref => (ref.path && ref.path.includes(property.id)) || (ref.id && ref.id === property.id)
-            );
-
-            if (propertyRef) {
-               // Get the document reference to the property in listings-managementApp
-               const listingDocRef =
-                  typeof propertyRef === "object" && propertyRef.path
-                     ? doc(fireDataBase, propertyRef.path)
-                     : doc(fireDataBase, "listings-managementApp", propertyRef.id || propertyRef);
-
-               // Update the property document
-               await updateDoc(listingDocRef, {
-                  name: formData.name,
-                  propertyType: formData.type,
-                  address: formData.address,
-                  units: formData.units,
-                  occupiedUnits: formData.occupiedUnits,
-                  monthlyRevenue: formData.monthlyRevenue,
-                  image: formData.image,
-                  updatedAt: new Date().toISOString()
-               });
-
-               // Update tenant references if needed
-               if (selectedUsers && selectedUsers.length > 0) {
-                  // First, get the current property document to check existing tenant references
-                  const propertyDoc = await getDoc(listingDocRef);
-                  const currentTenantRefs = propertyDoc.data()?.tenantRefs || [];
-
-                  // Process each selected tenant
-                  for (const tenant of selectedUsers) {
-                     if (tenant.uid) {
-                        const tenantDocRef = doc(fireDataBase, "tenants", tenant.uid);
-                        const tenantDoc = await getDoc(tenantDocRef);
-
-                        if (tenantDoc.exists()) {
-                           // Update tenant document with property reference
-                           await updateDoc(tenantDocRef, {
-                              propertyRef: listingDocRef
-                           });
-
-                           // Add tenant reference to property if not already there
-                           if (
-                              !currentTenantRefs.some(
-                                 ref => (ref.path && ref.path.includes(tenant.uid)) || (ref.id && ref.id === tenant.uid)
-                              )
-                           ) {
-                              await updateDoc(listingDocRef, {
-                                 tenantRefs: arrayUnion(tenantDocRef)
-                              });
-                           }
-                        }
-                     }
-                  }
-               }
-
-               // Create updated property object for local state
-               const updatedProperty = {
-                  ...property,
-                  title: formData.name,
-                  name: formData.name,
-                  propertyType: formData.type,
-                  address: formData.address,
-                  units: formData.units,
-                  occupiedUnits: formData.occupiedUnits,
-                  monthlyRevenue: formData.monthlyRevenue,
-                  image: formData.image
-               };
-
-               // Update local state
-               if (onPropertyUpdated) {
-                  onPropertyUpdated(updatedProperty);
-               }
-
-               // Close the dialog
-               onOpenChange(false);
-            } else {
-               setError("Property reference not found in your account");
-            }
-         } else {
-            setError("User profile not found");
-         }
-      } catch (err) {
-         console.error("Error updating property:", err);
-         setError("Failed to update property. Please try again.");
-      } finally {
+   const handleSubmit = () => {
+      if (!formData.name || !formData.address) {
+         setError("Name and address are required");
          setLoading(false);
+         return;
       }
-   };
 
+      if (!user.uid) {
+         setError("You must be logged in to add properties");
+         setLoading(false);
+         return;
+      }
+
+      // Create a new property object
+      const updatedProperty = {
+         ...property,
+         title: formData.name,
+         type: formData.type,
+         address: formData.address,
+         units: formData.units,
+         occupiedUnits: formData.occupiedUnits,
+         monthlyRevenue: formData.monthlyRevenue,
+         image: formData.image
+      };
+
+      // Update the property in Firestore
+      const propertyRef = doc(fireDataBase, "listings-managementApp", property.uid);
+      updateDoc(propertyRef, updatedProperty)
+         .then(() => {
+            // Update the property in the state
+            onPropertyUpdated(updatedProperty);
+            // Close the dialog
+            onOpenChange(false);
+         })
+         .catch(error => {
+            setError("Failed to update property. Please try again.");
+            console.error("Error updating property:", error);
+         })
+         .finally(() => {
+            setLoading(false);
+         });
+   };
    return (
       <Dialog
          open={isOpen}
@@ -238,7 +166,7 @@ const EditPropertyDialog = ({property, isOpen, onOpenChange, onPropertyUpdated})
                onOpenChange(true);
             }
          }}>
-         <DialogContent className="max-w-[95vw] sm:max-w-[525px] max-h-[90vh] overflow-y-auto">
+         <DialogContent className="bg-white max-w-[95vw] sm:max-w-[525px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
                <DialogTitle>Edit Property</DialogTitle>
                <DialogDescription>Update the details of your property. Click save when you're done.</DialogDescription>

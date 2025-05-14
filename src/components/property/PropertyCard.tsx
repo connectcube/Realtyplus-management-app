@@ -22,7 +22,7 @@ const getBadgeVariant = (type: Property["propertyType"]) => {
    }
 };
 interface Property {
-   id: string;
+   uid: string;
    title: string;
    name: string;
    address: string;
@@ -70,7 +70,7 @@ const PropertyCard = ({property, onPropertyUpdated}: PropertyCardProps) => {
 
             // Find the property reference that matches this property
             const propertyRef = propertyRefs.find(
-               ref => (ref.path && ref.path.includes(property.id)) || (ref.id && ref.id === property.id)
+               ref => (ref.path && ref.path.includes(property.uid)) || (ref.id && ref.id === property.uid)
             );
 
             if (propertyRef) {
@@ -85,7 +85,7 @@ const PropertyCard = ({property, onPropertyUpdated}: PropertyCardProps) => {
 
                // Remove the property reference from the user document
                const updatedPropertyRefs = propertyRefs.filter(
-                  ref => !(ref.path && ref.path.includes(property.id)) && !(ref.id && ref.id === property.id) && ref !== propertyRef
+                  ref => !(ref.path && ref.path.includes(property.uid)) && !(ref.id && ref.id === property.uid) && ref !== propertyRef
                );
 
                await updateDoc(userDocRef, {
@@ -93,7 +93,7 @@ const PropertyCard = ({property, onPropertyUpdated}: PropertyCardProps) => {
                });
 
                // Update local state
-               const updatedProperties = user.properties.filter(p => p.id !== property.id);
+               const updatedProperties = user.properties.filter(p => p.id !== property.uid);
                setUser({
                   properties: updatedProperties
                });
@@ -182,18 +182,20 @@ const PropertyCard = ({property, onPropertyUpdated}: PropertyCardProps) => {
                )}
             </Button>
          </CardFooter>
-
-         {/* Edit Property Dialog */}
-         <EditPropertyDialog
-            property={property}
-            isOpen={isEditDialogOpen}
-            onOpenChange={setIsEditDialogOpen}
-            onPropertyUpdated={updatedProperty => {
-               if (onPropertyUpdated) {
-                  onPropertyUpdated(updatedProperty);
-               }
-            }}
-         />
+         {isEditDialogOpen && (
+            <div className="top-0 left-0 fixed flex justify-center items-center w-[100svw] h-[100svh]">
+               <EditPropertyDialog
+                  property={property}
+                  isOpen={isEditDialogOpen}
+                  onOpenChange={setIsEditDialogOpen}
+                  onPropertyUpdated={updatedProperty => {
+                     if (onPropertyUpdated) {
+                        onPropertyUpdated(updatedProperty);
+                     }
+                  }}
+               />
+            </div>
+         )}
       </Card>
    );
 };
