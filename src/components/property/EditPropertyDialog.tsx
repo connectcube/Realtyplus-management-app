@@ -168,7 +168,7 @@ const EditPropertyDialog = ({property, isOpen, onOpenChange, onPropertyUpdated})
             if (tenantDocSnap.exists()) {
                // Update tenant document with property reference
                await updateDoc(tenantDocRef, {
-                  propertyRef: propertyRef
+                  propertyRefs: arrayUnion(propertyRef)
                });
             }
          }

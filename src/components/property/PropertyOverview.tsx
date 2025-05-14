@@ -349,7 +349,7 @@ const PropertyDialog = ({setIsAddPropertyDialogOpen, isAddPropertyDialogOpen, on
 
                if (tenantDoc.exists()) {
                   await updateDoc(tenantDocRef, {
-                     propertyRef: listingRef
+                     propertyRefs: [listingRef]
                   });
                }
             }
