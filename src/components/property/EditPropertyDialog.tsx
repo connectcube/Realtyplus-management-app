@@ -114,7 +114,9 @@ const EditPropertyDialog = ({property, isOpen, onOpenChange, onPropertyUpdated})
       // Close the dialog
       onOpenChange(false);
    };
-   const handleSubmit = () => {
+   const handleSubmit = async () => {
+      setLoading(true); // Set loading to true at the beginning
+
       if (!formData.name || !formData.address) {
          setError("Name and address are required");
          setLoading(false);
@@ -127,35 +129,56 @@ const EditPropertyDialog = ({property, isOpen, onOpenChange, onPropertyUpdated})
          return;
       }
 
-      // Create a new property object
-      const updatedProperty = {
-         ...property,
-         title: formData.name,
-         type: formData.type,
-         address: formData.address,
-         units: formData.units,
-         occupiedUnits: formData.occupiedUnits,
-         monthlyRevenue: formData.monthlyRevenue,
-         image: formData.image
-      };
+      try {
+         // Create a new property object
+         const updatedProperty = {
+            ...property,
+            title: formData.name,
+            type: formData.type,
+            address: formData.address,
+            units: formData.units,
+            occupiedUnits: formData.occupiedUnits,
+            monthlyRevenue: formData.monthlyRevenue,
+            image: formData.image
+         };
 
-      // Update the property in Firestore
-      const propertyRef = doc(fireDataBase, "listings-managementApp", property.uid);
-      updateDoc(propertyRef, updatedProperty)
-         .then(() => {
-            // Update the property in the state
-            onPropertyUpdated(updatedProperty);
-            // Close the dialog
-            onOpenChange(false);
-         })
-         .catch(error => {
-            setError("Failed to update property. Please try again.");
-            console.error("Error updating property:", error);
-         })
-         .finally(() => {
-            setLoading(false);
-         });
+         // Update the property in Firestore
+         const propertyRef = doc(fireDataBase, "listings-managementApp", property.uid);
+         await updateDoc(propertyRef, updatedProperty);
+
+         // Update tenant references if there are selected users
+         if (selectedUsers.length > 0) {
+            // Add tenant UIDs to property document
+            await updateDoc(propertyRef, {
+               tenants: arrayUnion(...selectedUsers.map(user => user.uid))
+            });
+
+            // Update each tenant document with a reference to this property
+            for (const tenant of selectedUsers) {
+               if (tenant.uid) {
+                  const tenantDocRef = doc(fireDataBase, "tenants", tenant.uid);
+                  const tenantDocSnap = await getDoc(tenantDocRef);
+
+                  if (tenantDocSnap.exists()) {
+                     // Update tenant document with property reference
+                     await updateDoc(tenantDocRef, {
+                        propertyRef: propertyRef
+                     });
+                  }
+               }
+            }
+         }
+
+         onPropertyUpdated(updatedProperty);
+         onOpenChange(false);
+      } catch (error) {
+         setError("Failed to update property. Please try again.");
+         console.error("Error updating property:", error);
+      } finally {
+         setLoading(false);
+      }
    };
+
    return (
       <Dialog
          open={isOpen}

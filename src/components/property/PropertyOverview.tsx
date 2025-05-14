@@ -340,10 +340,11 @@ const PropertyDialog = ({setIsAddPropertyDialogOpen, isAddPropertyDialogOpen, on
             await updateDoc(userDocRef, {
                propertyRefs: arrayUnion(listingRef)
             });
-
+            console.log(selectedUsers);
             // 3. Update tenant documents with property reference
             if (selectedUsers && selectedUsers.length > 0) {
                for (const tenant of selectedUsers) {
+                  console.log(tenant);
                   if (tenant.uid) {
                      const tenantDocRef = doc(fireDataBase, "tenants", tenant.uid);
                      const tenantDoc = await getDoc(tenantDocRef);
