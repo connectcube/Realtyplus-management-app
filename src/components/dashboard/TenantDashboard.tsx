@@ -170,6 +170,22 @@ const TenantDashboard = ({
          status: payment.isSuccessful ? ("completed" as const) : ("failed" as const)
       }));
    };
+   // Calculate remaining days between now and a target date
+   const calculateRemainingDays = (targetDate: Timestamp | undefined) => {
+      if (!targetDate) return 0;
+
+      const now = new Date();
+      const target = new Date(targetDate.seconds * 1000);
+
+      // Reset hours to compare just dates
+      now.setHours(0, 0, 0, 0);
+      target.setHours(0, 0, 0, 0);
+
+      const diffTime = target.getTime() - now.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      return diffDays > 0 ? diffDays : 0;
+   };
 
    return (
       <div className="bg-gray-50 w-full min-h-screen">
@@ -208,11 +224,11 @@ const TenantDashboard = ({
                <TabsContent value="rent" className="space-y-6 mt-6">
                   <div className="gap-6 grid grid-cols-1 md:grid-cols-2">
                      <RentStatusCard
-                        dueDate={property?.payments?.[0]?.dueDate ? formatDate(property.payments[0].dueDate) : rentInfo.dueDate}
+                        dueDate={property?.payments?.[0]?.dueDate}
                         amount={property?.lease?.monthlyRent || rentInfo.amount}
-                        status={rentInfo.status}
-                        remainingDays={rentInfo.remainingDays}
-                        percentagePaid={rentInfo.percentagePaid}
+                        status={property?.payments?.[0]?.isSuccessful ? "paid" : "due"}
+                        remainingDays={calculateRemainingDays(property?.payments?.[0]?.dueDate)}
+                        percentagePaid={property?.payments?.[0]?.isSuccessful ? 100 : 0}
                         enablePayment={true}
                         paymentHistory={property?.payments ? convertToPaymentHistory(filteredPayments.slice(0, 3)) : undefined}
                      />
