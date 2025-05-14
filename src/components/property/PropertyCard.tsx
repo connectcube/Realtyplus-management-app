@@ -150,7 +150,7 @@ const PropertyCard = ({property, onPropertyUpdated}: PropertyCardProps) => {
                   <p className="font-medium">
                      {property.units > 0 ? Math.round(((property.occupiedUnits || 0) / (property.units || 1)) * 100) : 0}%
                   </p>
-               </div>
+               </div> 
                <div>
                   <p className="text-muted-foreground">Monthly Revenue</p>
                   <p className="font-medium">ZMW {property.monthlyRevenue || 0}</p>

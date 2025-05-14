@@ -20,6 +20,7 @@ interface User {
    phone: string | null;
    properties: any[];
    propertyRefs: DocumentReference[];
+   propertyRef: DocumentReference;
    tenants: any[];
    messages: any[];
    requests: any;
@@ -45,6 +46,7 @@ const initialState: User = {
    id: null,
    phone: null,
    propertyRefs: [],
+   propertyRef: null,
    properties: [],
    tenants: [],
    messages: [],

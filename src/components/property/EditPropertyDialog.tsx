@@ -29,8 +29,8 @@ const EditPropertyDialog = ({property, isOpen, onOpenChange, onPropertyUpdated})
    const [imageUploading, setImageUploading] = useState(false);
    const [uploadedImageRef, setUploadedImageRef] = useState(null);
    const [originalImageUrl, setOriginalImageUrl] = useState(property.image || "");
+   const [selectedTenant, setSelectedTenant] = useState(property.tenant || null);
 
-   // Initialize form data when property changes
    useEffect(() => {
       setFormData({
          name: property.title || property.name || "",
@@ -41,7 +41,7 @@ const EditPropertyDialog = ({property, isOpen, onOpenChange, onPropertyUpdated})
          monthlyRevenue: property.monthlyRevenue || 0,
          image: property.image || ""
       });
-      setSelectedUsers(property.tenants || []);
+      setSelectedTenant(property.tenant || null);
       setOriginalImageUrl(property.image || "");
    }, [property]);
 
@@ -115,7 +115,7 @@ const EditPropertyDialog = ({property, isOpen, onOpenChange, onPropertyUpdated})
       onOpenChange(false);
    };
    const handleSubmit = async () => {
-      setLoading(true); // Set loading to true at the beginning
+      setLoading(true);
 
       if (!formData.name || !formData.address) {
          setError("Name and address are required");
@@ -139,33 +139,37 @@ const EditPropertyDialog = ({property, isOpen, onOpenChange, onPropertyUpdated})
             units: formData.units,
             occupiedUnits: formData.occupiedUnits,
             monthlyRevenue: formData.monthlyRevenue,
-            image: formData.image
+            image: formData.image,
+            tenant: selectedTenant // Store the single tenant
          };
 
          // Update the property in Firestore
          const propertyRef = doc(fireDataBase, "listings-managementApp", property.uid);
          await updateDoc(propertyRef, updatedProperty);
 
-         // Update tenant references if there are selected users
-         if (selectedUsers.length > 0) {
-            // Add tenant UIDs to property document
-            await updateDoc(propertyRef, {
-               tenants: arrayUnion(...selectedUsers.map(user => user.uid))
-            });
+         // If there's a previously linked tenant that's different from the current one,
+         // remove the property reference from that tenant
+         if (property.tenant && (!selectedTenant || property.tenant.uid !== selectedTenant.uid)) {
+            const prevTenantDocRef = doc(fireDataBase, "tenants", property.tenant.uid);
+            const prevTenantDocSnap = await getDoc(prevTenantDocRef);
 
-            // Update each tenant document with a reference to this property
-            for (const tenant of selectedUsers) {
-               if (tenant.uid) {
-                  const tenantDocRef = doc(fireDataBase, "tenants", tenant.uid);
-                  const tenantDocSnap = await getDoc(tenantDocRef);
+            if (prevTenantDocSnap.exists()) {
+               await updateDoc(prevTenantDocRef, {
+                  propertyRef: null
+               });
+            }
+         }
 
-                  if (tenantDocSnap.exists()) {
-                     // Update tenant document with property reference
-                     await updateDoc(tenantDocRef, {
-                        propertyRef: propertyRef
-                     });
-                  }
-               }
+         // If there's a new tenant selected, update their document
+         if (selectedTenant) {
+            const tenantDocRef = doc(fireDataBase, "tenants", selectedTenant.uid);
+            const tenantDocSnap = await getDoc(tenantDocRef);
+
+            if (tenantDocSnap.exists()) {
+               // Update tenant document with property reference
+               await updateDoc(tenantDocRef, {
+                  propertyRef: propertyRef
+               });
             }
          }
 
@@ -277,12 +281,23 @@ const EditPropertyDialog = ({property, isOpen, onOpenChange, onPropertyUpdated})
                   />
                </div>
                <div className="items-center gap-2 grid grid-cols-1 sm:grid-cols-4">
-                  <Label htmlFor="tenants" className="sm:text-right">
-                     Link Tenants
+                  <Label htmlFor="tenant" className="sm:text-right">
+                     Link Tenant
                   </Label>
-                  <UserSelector onUserSelect={setSelectedUsers} selectedUsers={selectedUsers} />
+                  <UserSelector
+                     onUserSelect={users => setSelectedTenant(users.length > 0 ? users[0] : null)}
+                     selectedUsers={selectedTenant ? [selectedTenant] : []}
+                  />
                </div>
-
+               {selectedTenant && (
+                  <div className="items-center gap-2 grid grid-cols-1 sm:grid-cols-4">
+                     <div className="sm:text-right"></div>
+                     <div className="col-span-1 sm:col-span-3 text-sm">
+                        <span className="text-muted-foreground">Currently linked to: </span>
+                        <span className="font-medium">{selectedTenant.displayName || selectedTenant.email}</span>
+                     </div>
+                  </div>
+               )}
                <div className="items-center gap-2 grid grid-cols-1 sm:grid-cols-4">
                   <Label htmlFor="image" className="sm:text-right">
                      Property Image

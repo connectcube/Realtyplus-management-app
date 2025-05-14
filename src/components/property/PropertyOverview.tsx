@@ -251,7 +251,7 @@ const PropertyDialog = ({setIsAddPropertyDialogOpen, isAddPropertyDialogOpen, on
    const [selectedUsers, setSelectedUsers] = useState([]);
    const [imageUploading, setImageUploading] = useState(false);
    const [uploadedImageRef, setUploadedImageRef] = useState(null);
-
+   const [selectedTenant, setSelectedTenant] = useState(null);
    const handleImageUpload = async e => {
       const file = e.target.files?.[0];
       if (!file) return;
@@ -291,7 +291,6 @@ const PropertyDialog = ({setIsAddPropertyDialogOpen, isAddPropertyDialogOpen, on
          [id]: id === "units" ? parseInt(value) : value
       }));
    };
-
    const handleSubmit = async () => {
       try {
          setLoading(true);
@@ -314,7 +313,7 @@ const PropertyDialog = ({setIsAddPropertyDialogOpen, isAddPropertyDialogOpen, on
             id: Date.now().toString(),
             name: formData.name,
             type: formData.type,
-            propertyType: formData.type, // Adding propertyType for consistency
+            propertyType: formData.type,
             address: formData.address,
             units: formData.units,
             occupiedUnits: 0,
@@ -326,8 +325,10 @@ const PropertyDialog = ({setIsAddPropertyDialogOpen, isAddPropertyDialogOpen, on
                userName: user.userName,
                role: user.role
             },
+            tenant: selectedTenant, // Store single tenant
             createdAt: new Date().toISOString()
          };
+
          // First, check if the user document exists in Firestore
          const userDocRef = doc(fireDataBase, user.role, user.uid);
          const userDoc = await getDoc(userDocRef);
@@ -340,28 +341,20 @@ const PropertyDialog = ({setIsAddPropertyDialogOpen, isAddPropertyDialogOpen, on
             await updateDoc(userDocRef, {
                propertyRefs: arrayUnion(listingRef)
             });
-            console.log(selectedUsers);
-            // 3. Update tenant documents with property reference
-            if (selectedUsers && selectedUsers.length > 0) {
-               for (const tenant of selectedUsers) {
-                  console.log(tenant);
-                  if (tenant.uid) {
-                     const tenantDocRef = doc(fireDataBase, "tenants", tenant.uid);
-                     const tenantDoc = await getDoc(tenantDocRef);
 
-                     if (tenantDoc.exists()) {
-                        await updateDoc(tenantDocRef, {
-                           propertyRef: listingRef
-                        });
-                        await updateDoc(listingRef, {
-                           tenantRef: tenantDocRef
-                        });
-                     }
-                  }
+            // 3. Update tenant document with property reference if tenant is selected
+            if (selectedTenant && selectedTenant.uid) {
+               const tenantDocRef = doc(fireDataBase, "tenants", selectedTenant.uid);
+               const tenantDoc = await getDoc(tenantDocRef);
+
+               if (tenantDoc.exists()) {
+                  await updateDoc(tenantDocRef, {
+                     propertyRef: listingRef
+                  });
                }
             }
 
-            // Update local state - you might need to adjust this based on how you want to handle the new structure
+            // Update local state
             const updatedProperties = [...(user.properties || []), newProperty];
             setUser({
                properties: updatedProperties
@@ -610,10 +603,13 @@ const PropertyDialog = ({setIsAddPropertyDialogOpen, isAddPropertyDialogOpen, on
                   />
                </div>
                <div className="items-center gap-2 grid grid-cols-1 sm:grid-cols-4">
-                  <Label htmlFor="tenants" className="sm:text-right">
-                     Link Tenants
+                  <Label htmlFor="tenant" className="sm:text-right">
+                     Link Tenant
                   </Label>
-                  <UserSelector onUserSelect={setSelectedUsers} selectedUsers={selectedUsers} />
+                  <UserSelector
+                     onUserSelect={users => setSelectedTenant(users.length > 0 ? users[0] : null)}
+                     selectedUsers={selectedTenant ? [selectedTenant] : []}
+                  />
                </div>
 
                <div className="items-center gap-2 grid grid-cols-1 sm:grid-cols-4">
