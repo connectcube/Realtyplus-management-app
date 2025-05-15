@@ -48,9 +48,10 @@ const login = async (setIsLoading, formData) => {
             role: userType,
             email: userData.email,
             uid: userData.uid,
-            id: querySnapshot.docs[0].id, // Firestore document ID
+            id: querySnapshot.docs[0].id,
             phone: userData.phone,
             propertyRefs: userData.propertyRefs,
+            propertyRef: userData.propertyRef,
             tenantRefs: userData.tenantRefs,
           });
           console.log('Profile updated with role:', role);

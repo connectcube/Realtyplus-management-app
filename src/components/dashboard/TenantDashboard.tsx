@@ -98,37 +98,44 @@ const TenantDashboard = ({
     'newest'
   );
   const [filteredPayments, setFilteredPayments] = useState<PAYMENT[]>([]);
-
+  console.log(user);
   useEffect(() => {
     const fetchPropertyData = async () => {
-      // Check for propertyRefs array instead of propertyRef
-      if (!user || !user.propertyRefs || user.propertyRefs.length === 0) {
-        setLoading(false);
-        return;
-      }
+      console.log('Starting fetchPropertyData with user:', user);
 
       try {
+        console.log('Attempting to fetch property with propertyRef:', user.propertyRef);
         // For tenants, we only use the first property reference
-        const propertyDoc = await getDoc(user.propertyRefs[0]);
+        const propertyDoc = await getDoc(user.propertyRef);
+        console.log('Property document exists:', propertyDoc.exists());
         if (propertyDoc.exists()) {
           const propertyData = propertyDoc.data() as PropertyData;
+          console.log('Retrieved property data:', propertyData);
           setProperty(propertyData);
           // Initialize filtered payments
           if (propertyData.payments && propertyData.payments.length > 0) {
+            console.log('Found payments:', propertyData.payments);
             setFilteredPayments(sortPayments(propertyData.payments, 'newest'));
+          } else {
+            console.log('No payments found in property data');
           }
           if (propertyData.postedByDetails?.uid) {
+            console.log('Fetching landlord details with UID:', propertyData.postedByDetails.uid);
             const landlordDoc = await getDoc(
               doc(fireDataBase, 'users', propertyData.postedByDetails.uid)
             );
+            console.log('Landlord document exists:', landlordDoc.exists());
             if (landlordDoc.exists()) {
-              setLandlordDetails(landlordDoc.data());
+              const landlordData = landlordDoc.data();
+              console.log('Retrieved landlord data:', landlordData);
+              setLandlordDetails(landlordData);
             }
           }
         }
       } catch (error) {
         console.error('Error fetching property data:', error);
       } finally {
+        console.log('Finished loading property data');
         setLoading(false);
       }
     };
