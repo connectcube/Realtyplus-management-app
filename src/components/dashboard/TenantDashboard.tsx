@@ -98,11 +98,9 @@ const TenantDashboard = ({
     'newest'
   );
   const [filteredPayments, setFilteredPayments] = useState<PAYMENT[]>([]);
-  console.log(user);
   useEffect(() => {
     const fetchPropertyData = async () => {
       console.log('Starting fetchPropertyData with user:', user);
-
       try {
         console.log('Attempting to fetch property with propertyRef:', user.propertyRef);
         // For tenants, we only use the first property reference

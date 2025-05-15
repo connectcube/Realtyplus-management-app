@@ -44,6 +44,7 @@ const login = async (setIsLoading, formData) => {
           console.log('User data:', userData);
 
           updateProfile({
+            ...userData,
             userName: `${userData.firstName} ${userData.lastName}`,
             role: userType,
             email: userData.email,
