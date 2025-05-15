@@ -423,9 +423,7 @@ const TenantManagement = ({ tenants = [] }: TenantManagementProps) => {
             </CardContent>
             <CardFooter className="pt-4 border-t">
               <div className="flex justify-between items-center w-full">
-                <div className="font-medium text-sm">
-                  ZMW {tenant.rentAmount.toLocaleString()}/month
-                </div>
+                <div className="font-medium text-sm">ZMW {tenant.rentAmount || 0}/month</div>
                 <Button variant="outline" size="sm" onClick={() => handleViewTenant(tenant)}>
                   View Details
                 </Button>
@@ -501,7 +499,7 @@ const TenantManagement = ({ tenants = [] }: TenantManagementProps) => {
                   </div>
                   <div>
                     <p className="font-medium text-sm">Monthly Rent</p>
-                    <p>ZMW {selectedTenant.rentAmount.toLocaleString()}</p>
+                    <p>ZMW {selectedTenant.rentAmount || 0}</p>
                   </div>
                   <div>
                     <p className="font-medium text-sm">Status</p>

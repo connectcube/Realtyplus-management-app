@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Bell, Home, MessageSquare, Settings, Wrench, User } from 'lucide-react';
 import PropertyOverview from '@/components/property/PropertyOverview';
@@ -41,7 +40,7 @@ const LandlordDashboard = ({
             <CardContent className="flex justify-between items-center p-3 sm:p-4">
               <div>
                 <p className="text-gray-500 text-xs sm:text-sm">Properties</p>
-                <p className="font-bold text-lg sm:text-2xl">{user.properties.length}</p>
+                <p className="font-bold text-lg sm:text-2xl">{user.propertyRefs.length}</p>
               </div>
               <div className="flex justify-center items-center bg-blue-100 rounded-full w-8 sm:w-10 h-8 sm:h-10">
                 <Home className="w-4 sm:w-5 h-4 sm:h-5 text-blue-600" />
