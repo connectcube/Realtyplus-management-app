@@ -57,8 +57,8 @@ interface PropertyData {
       phone: string;
    };
    lease?: {
-      startDate: string;
-      endDate: string;
+      startDate: Timestamp;
+      endDate: Timestamp;
       monthlyRent: number;
    };
    emergency?: {
@@ -158,9 +158,11 @@ const TenantDashboard = ({
 
    // Format date from timestamp
    const formatDate = (timestamp: {seconds: number; nanoseconds: number}) => {
-      return new Date(timestamp.seconds * 1000).toLocaleDateString();
+      console.log("TenantDashboard formatDate input:", timestamp);
+      const formattedDate = new Date(timestamp.seconds * 1000).toLocaleDateString();
+      console.log("TenantDashboard formatDate output:", formattedDate, "type: ", typeof formattedDate);
+      return formattedDate;
    };
-
    // Convert payments to the format expected by RentStatusCard
    const convertToPaymentHistory = (payments: PAYMENT[]) => {
       return payments.map(payment => ({
@@ -253,8 +255,10 @@ const TenantDashboard = ({
 
                               <div>
                                  <h3 className="font-medium text-gray-500 text-sm">Lease Information</h3>
-                                 <p className="mt-1">Start Date: {property?.lease?.startDate || "January 1, 2023"}</p>
-                                 <p className="text-gray-500 text-sm">End Date: {property?.lease?.endDate || "December 31, 2023"}</p>
+                                 <p className="mt-1">Start Date: {formatDate(property?.lease?.startDate) || "January 1, 2023"}</p>
+                                 <p className="text-gray-500 text-sm">
+                                    End Date: {formatDate(property?.lease?.endDate) || "December 31, 2023"}
+                                 </p>
                                  <p className="text-gray-500 text-sm">Monthly Rent: ZMW {property?.lease?.monthlyRent || 1200}</p>
                                  <Button
                                     variant="link"
