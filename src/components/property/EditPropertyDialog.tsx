@@ -170,16 +170,26 @@ const EditPropertyDialog = ({ property, isOpen, onOpenChange, onPropertyUpdated 
         }
       }
 
-      // If there's a new tenant selected, update their document
       if (selectedTenant) {
         const tenantDocRef = doc(fireDataBase, 'tenants', selectedTenant.uid);
         const tenantDocSnap = await getDoc(tenantDocRef);
 
         if (tenantDocSnap.exists()) {
-          // Update tenant document with property reference
+          // Get current propertyRefs array
+          const tenantData = tenantDocSnap.data();
+          const currentPropertyRefs = tenantData.propertyRefs || [];
+
+          // Create a new array with propertyRef at the front
+          const updatedPropertyRefs = [
+            propertyRef,
+            ...currentPropertyRefs.filter(ref => ref.path !== propertyRef.path),
+          ];
+
+          // Update tenant document with the new array
           await updateDoc(tenantDocRef, {
-            propertyRefs: arrayUnion(propertyRef),
+            propertyRefs: updatedPropertyRefs,
           });
+
           await updateDoc(userDocRef, {
             tenantRefs: arrayUnion(tenantDocRef),
           });
