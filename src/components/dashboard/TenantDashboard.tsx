@@ -288,7 +288,6 @@ const TenantDashboard = ({
                         {landlordDetails?.phone || property?.manager?.phone || '(555) 123-4567'}
                       </p>
                     </div>
-
                     <div>
                       <h3 className="font-medium text-gray-500 text-sm">Lease Information</h3>
                       <p className="mt-1">
@@ -308,7 +307,6 @@ const TenantDashboard = ({
                         Rate your landlord
                       </Button>
                     </div>
-
                     <div>
                       <h3 className="font-medium text-gray-500 text-sm">Emergency Contacts</h3>
                       <p className="mt-1">
@@ -323,7 +321,6 @@ const TenantDashboard = ({
               </Card>
             </div>
           </TabsContent>
-
           <TabsContent value="request" className="mt-6">
             <MaintenanceRequestForm />
           </TabsContent>
@@ -339,7 +336,6 @@ const TenantDashboard = ({
           </TabsContent>
         </Tabs>
       </div>
-
       {/* Landlord Rating Dialog */}
       <Dialog open={showRatingDialog} onOpenChange={setShowRatingDialog}>
         <DialogContent>

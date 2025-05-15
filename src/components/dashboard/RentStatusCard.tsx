@@ -380,13 +380,13 @@ const RentStatusCard = ({
                       <div className="flex items-center gap-3">
                         <span className="font-medium">{formatCurrency(payment.amount)}</span>
                         <Badge
-                          className={
+                          className={`${
                             payment.status === 'completed'
                               ? 'bg-green-100 text-green-800'
                               : payment.status === 'pending'
                               ? 'bg-yellow-100 text-yellow-800'
                               : 'bg-red-100 text-red-800'
-                          }
+                          } capitalize`}
                         >
                           {payment.status}
                         </Badge>
