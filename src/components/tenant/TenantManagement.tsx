@@ -25,7 +25,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useStore } from '@/lib/zustand';
 import { fireDataBase } from '@/lib/firebase';
-import { collection, getDocs, doc, addDoc, updateDoc, deleteDoc, getDoc } from 'firebase/firestore';
+import {
+  collection,
+  getDocs,
+  doc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  getDoc,
+  Timestamp,
+} from 'firebase/firestore';
 
 interface Tenant {
   id: string;
@@ -44,7 +53,15 @@ interface Tenant {
 interface TenantManagementProps {
   tenants?: Tenant[];
 }
-
+interface Property {
+  title: string;
+  lease: {
+    startDate: Timestamp;
+    endDate: Timestamp;
+    monthlyRent: number;
+  };
+  units: number;
+}
 const TenantManagement = ({ tenants = [] }: TenantManagementProps) => {
   const { user, setUser } = useStore();
   console.log('User', user);
@@ -85,7 +102,7 @@ const TenantManagement = ({ tenants = [] }: TenantManagementProps) => {
               if (tenantData.propertyRefs?.[0]) {
                 const propertySnapshot = await getDoc(tenantData.propertyRefs[0]);
                 if (propertySnapshot.exists()) {
-                  const propData = propertySnapshot.data();
+                  const propData = propertySnapshot.data() as Property;
 
                   // Handle lease data with timestamps
                   const leaseStartDate = propData.lease?.startDate?.toDate?.()
@@ -97,8 +114,8 @@ const TenantManagement = ({ tenants = [] }: TenantManagementProps) => {
                     : '';
 
                   propertyData = {
-                    property: propData.title || propData.name || '',
-                    unit: propData.unit || '',
+                    property: propData.title || '',
+                    unit: propData.units || '',
                     leaseStart: leaseStartDate,
                     leaseEnd: leaseEndDate,
                     rentAmount: propData.lease?.monthlyRent || 0,

@@ -377,7 +377,7 @@ const PropertyDialog = ({
 
       // Create a new property object
       const newProperty = {
-        id: Date.now().toString(),
+        uid: '',
         name: formData.name,
         type: formData.type,
         propertyType: formData.type,
@@ -408,7 +408,9 @@ const PropertyDialog = ({
           collection(fireDataBase, 'listings-managementApp'),
           newProperty
         );
-
+        await updateDoc(listingRef, {
+          uid: listingRef.id,
+        });
         // 2. Add the property reference to the user's properties array
         await updateDoc(userDocRef, {
           propertyRefs: arrayUnion(listingRef),
@@ -421,8 +423,9 @@ const PropertyDialog = ({
 
           if (tenantDoc.exists()) {
             await updateDoc(tenantDocRef, {
-              propertyRefs: [listingRef],
+              propertyRef: listingRef,
             });
+
             await updateDoc(userDocRef, {
               tenantRefs: arrayUnion(tenantDocRef),
             });

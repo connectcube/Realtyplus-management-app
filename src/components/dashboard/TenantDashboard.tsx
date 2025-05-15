@@ -164,10 +164,13 @@ const TenantDashboard = ({
   }, [sortOrder, property?.payments]);
 
   // Format date from timestamp
-  const formatDate = (timestamp: { seconds: number; nanoseconds: number }) => {
+  // Format date from timestamp
+  const formatDate = (timestamp?: { seconds: number; nanoseconds: number }) => {
+    if (!timestamp) return 'Not available';
     const formattedDate = new Date(timestamp.seconds * 1000).toLocaleDateString();
     return formattedDate;
   };
+
   // Convert payments to the format expected by RentStatusCard
   const convertToPaymentHistory = (payments: PAYMENT[]) => {
     return payments.map(payment => ({

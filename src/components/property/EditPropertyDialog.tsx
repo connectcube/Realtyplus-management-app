@@ -175,19 +175,9 @@ const EditPropertyDialog = ({ property, isOpen, onOpenChange, onPropertyUpdated 
         const tenantDocSnap = await getDoc(tenantDocRef);
 
         if (tenantDocSnap.exists()) {
-          // Get current propertyRefs array
-          const tenantData = tenantDocSnap.data();
-          const currentPropertyRefs = tenantData.propertyRefs || [];
-
-          // Create a new array with propertyRef at the front
-          const updatedPropertyRefs = [
-            propertyRef,
-            ...currentPropertyRefs.filter(ref => ref.path !== propertyRef.path),
-          ];
-
           // Update tenant document with the new array
           await updateDoc(tenantDocRef, {
-            propertyRefs: updatedPropertyRefs,
+            propertyRef: propertyRef,
           });
 
           await updateDoc(userDocRef, {
