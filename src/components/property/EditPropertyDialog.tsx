@@ -1,6 +1,6 @@
 import { fireDataBase, fireStorage } from '@/lib/firebase';
 import { useStore } from '@/lib/zustand';
-import { arrayUnion, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { arrayUnion, doc, getDoc, Timestamp, updateDoc } from 'firebase/firestore';
 import { deleteObject, getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { useEffect, useState } from 'react';
 import {
@@ -29,7 +29,15 @@ const EditPropertyDialog = ({ property, isOpen, onOpenChange, onPropertyUpdated 
     occupiedUnits: property.occupiedUnits || 0,
     monthlyRevenue: property.monthlyRevenue || 0,
     image: property.image || '',
+    leaseStartDate: property.lease?.startDate
+      ? new Date(property.lease.startDate.seconds * 1000).toISOString().split('T')[0]
+      : '',
+    leaseEndDate: property.lease?.endDate
+      ? new Date(property.lease.endDate.seconds * 1000).toISOString().split('T')[0]
+      : '',
+    leaseMonthlyRent: property.lease?.monthlyRent || 0,
   });
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedUsers, setSelectedUsers] = useState(property.tenants || []);
@@ -47,6 +55,13 @@ const EditPropertyDialog = ({ property, isOpen, onOpenChange, onPropertyUpdated 
       occupiedUnits: property.occupiedUnits || 0,
       monthlyRevenue: property.monthlyRevenue || 0,
       image: property.image || '',
+      leaseStartDate: property.lease?.startDate
+        ? new Date(property.lease.startDate.seconds * 1000).toISOString().split('T')[0]
+        : '',
+      leaseEndDate: property.lease?.endDate
+        ? new Date(property.lease.endDate.seconds * 1000).toISOString().split('T')[0]
+        : '',
+      leaseMonthlyRent: property.lease?.monthlyRent || 0,
     });
     setSelectedTenant(property.tenant || null);
     setOriginalImageUrl(property.image || '');
@@ -56,7 +71,9 @@ const EditPropertyDialog = ({ property, isOpen, onOpenChange, onPropertyUpdated 
     const { id, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [id]: ['units', 'occupiedUnits', 'monthlyRevenue'].includes(id) ? parseInt(value) : value,
+      [id]: ['units', 'occupiedUnits', 'monthlyRevenue', 'leaseMonthlyRent'].includes(id)
+        ? parseInt(value)
+        : value,
     }));
   };
 
@@ -108,6 +125,7 @@ const EditPropertyDialog = ({ property, isOpen, onOpenChange, onPropertyUpdated 
     }
 
     // Reset form data to original property values
+    // Reset form data to original property values
     setFormData({
       name: property.title || property.name || '',
       type: property.propertyType || property.type || 'apartment',
@@ -116,6 +134,13 @@ const EditPropertyDialog = ({ property, isOpen, onOpenChange, onPropertyUpdated 
       occupiedUnits: property.occupiedUnits || 0,
       monthlyRevenue: property.monthlyRevenue || 0,
       image: property.image || '',
+      leaseStartDate: property.lease?.startDate
+        ? new Date(property.lease.startDate.seconds * 1000).toISOString().split('T')[0]
+        : '',
+      leaseEndDate: property.lease?.endDate
+        ? new Date(property.lease.endDate.seconds * 1000).toISOString().split('T')[0]
+        : '',
+      leaseMonthlyRent: property.lease?.monthlyRent || 0,
     });
 
     // Reset uploaded image reference
@@ -140,6 +165,15 @@ const EditPropertyDialog = ({ property, isOpen, onOpenChange, onPropertyUpdated 
     }
 
     try {
+      // Create lease object with Firebase timestamps
+      const lease = {
+        startDate: formData.leaseStartDate
+          ? Timestamp.fromDate(new Date(formData.leaseStartDate))
+          : null,
+        endDate: formData.leaseEndDate ? Timestamp.fromDate(new Date(formData.leaseEndDate)) : null,
+        monthlyRent: formData.leaseMonthlyRent || 0,
+      };
+
       // Create a new property object
       const updatedProperty = {
         ...property,
@@ -151,6 +185,7 @@ const EditPropertyDialog = ({ property, isOpen, onOpenChange, onPropertyUpdated 
         monthlyRevenue: formData.monthlyRevenue,
         image: formData.image,
         tenant: selectedTenant, // Store the single tenant
+        lease: lease, // Add lease information
       };
 
       // Update the property in Firestore
@@ -299,6 +334,50 @@ const EditPropertyDialog = ({ property, isOpen, onOpenChange, onPropertyUpdated 
               className="col-span-1 sm:col-span-3"
             />
           </div>
+          <div className="col-span-full mt-2 pt-4 border-t">
+            <h3 className="mb-3 font-medium text-base">Lease Information</h3>
+          </div>
+
+          <div className="items-center gap-2 grid grid-cols-1 sm:grid-cols-4">
+            <Label htmlFor="leaseStartDate" className="sm:text-right">
+              Lease Start Date
+            </Label>
+            <Input
+              id="leaseStartDate"
+              type="date"
+              value={formData.leaseStartDate}
+              onChange={handleChange}
+              className="col-span-1 sm:col-span-3"
+            />
+          </div>
+
+          <div className="items-center gap-2 grid grid-cols-1 sm:grid-cols-4">
+            <Label htmlFor="leaseEndDate" className="sm:text-right">
+              Lease End Date
+            </Label>
+            <Input
+              id="leaseEndDate"
+              type="date"
+              value={formData.leaseEndDate}
+              onChange={handleChange}
+              className="col-span-1 sm:col-span-3"
+            />
+          </div>
+
+          <div className="items-center gap-2 grid grid-cols-1 sm:grid-cols-4">
+            <Label htmlFor="leaseMonthlyRent" className="sm:text-right">
+              Monthly Rent
+            </Label>
+            <Input
+              id="leaseMonthlyRent"
+              type="number"
+              min="0"
+              value={formData.leaseMonthlyRent}
+              onChange={handleChange}
+              className="col-span-1 sm:col-span-3"
+            />
+          </div>
+
           <div className="items-center gap-2 grid grid-cols-1 sm:grid-cols-4">
             <Label htmlFor="tenant" className="sm:text-right">
               Link Tenant
@@ -360,6 +439,7 @@ const EditPropertyDialog = ({ property, isOpen, onOpenChange, onPropertyUpdated 
             </div>
           </div>
         </div>
+
         <DialogFooter className="sm:flex-row flex-col gap-2">
           <Button
             variant="outline"

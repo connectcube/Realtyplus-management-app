@@ -43,6 +43,7 @@ import {
   getDoc,
   onSnapshot,
   query,
+  Timestamp,
   updateDoc,
   where,
 } from 'firebase/firestore';
@@ -307,7 +308,11 @@ const PropertyDialog = ({
     address: '',
     units: 1,
     image: '',
+    leaseStartDate: '',
+    leaseEndDate: '',
+    leaseMonthlyRent: 0,
   });
+
   const [fetchedProperties, setFetchedProperties] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(false);
@@ -355,9 +360,10 @@ const PropertyDialog = ({
     const { id, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [id]: id === 'units' ? parseInt(value) : value,
+      [id]: ['units', 'leaseMonthlyRent'].includes(id) ? parseInt(value) : value,
     }));
   };
+
   const handleSubmit = async () => {
     try {
       setLoading(true);
@@ -374,6 +380,15 @@ const PropertyDialog = ({
         setLoading(false);
         return;
       }
+
+      // Create lease object with Firebase timestamps
+      const lease = {
+        startDate: formData.leaseStartDate
+          ? Timestamp.fromDate(new Date(formData.leaseStartDate))
+          : null,
+        endDate: formData.leaseEndDate ? Timestamp.fromDate(new Date(formData.leaseEndDate)) : null,
+        monthlyRent: formData.leaseMonthlyRent || 0,
+      };
 
       // Create a new property object
       const newProperty = {
@@ -394,7 +409,8 @@ const PropertyDialog = ({
           userName: user.userName,
           role: user.role,
         },
-        tenant: selectedTenant, // Store single tenant
+        tenant: selectedTenant,
+        lease: lease, // Add lease information
         createdAt: new Date().toISOString(),
       };
 
@@ -450,6 +466,9 @@ const PropertyDialog = ({
           address: '',
           units: 1,
           image: '',
+          leaseStartDate: '',
+          leaseEndDate: '',
+          leaseMonthlyRent: 0,
         });
       } else {
         setError('User profile not found. Please complete your profile setup first.');
@@ -555,6 +574,9 @@ const PropertyDialog = ({
         address: '',
         units: 1,
         image: '',
+        leaseStartDate: '',
+        leaseEndDate: '',
+        leaseMonthlyRent: 0,
       });
 
       setIsAddPropertyDialogOpen(false);
@@ -584,6 +606,9 @@ const PropertyDialog = ({
       address: '',
       units: 1,
       image: '',
+      leaseStartDate: '',
+      leaseEndDate: '',
+      leaseMonthlyRent: 0,
     });
 
     // Reset uploaded image reference
@@ -741,6 +766,49 @@ const PropertyDialog = ({
                 onChange={handleChange}
               />
             </div>
+          </div>
+          <div className="col-span-full mt-2 pt-4 border-t">
+            <h3 className="mb-3 font-medium text-base">Lease Information</h3>
+          </div>
+
+          <div className="items-center gap-2 grid grid-cols-1 sm:grid-cols-4">
+            <Label htmlFor="leaseStartDate" className="sm:text-right">
+              Lease Start Date
+            </Label>
+            <Input
+              id="leaseStartDate"
+              type="date"
+              value={formData.leaseStartDate}
+              onChange={handleChange}
+              className="col-span-1 sm:col-span-3"
+            />
+          </div>
+
+          <div className="items-center gap-2 grid grid-cols-1 sm:grid-cols-4">
+            <Label htmlFor="leaseEndDate" className="sm:text-right">
+              Lease End Date
+            </Label>
+            <Input
+              id="leaseEndDate"
+              type="date"
+              value={formData.leaseEndDate}
+              onChange={handleChange}
+              className="col-span-1 sm:col-span-3"
+            />
+          </div>
+
+          <div className="items-center gap-2 grid grid-cols-1 sm:grid-cols-4">
+            <Label htmlFor="leaseMonthlyRent" className="sm:text-right">
+              Monthly Rent
+            </Label>
+            <Input
+              id="leaseMonthlyRent"
+              type="number"
+              min="0"
+              value={formData.leaseMonthlyRent}
+              onChange={handleChange}
+              className="col-span-1 sm:col-span-3"
+            />
           </div>
         </div>
         <DialogFooter className="sm:flex-row flex-col gap-2">
