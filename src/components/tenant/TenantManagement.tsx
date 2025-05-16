@@ -34,6 +34,8 @@ import {
   deleteDoc,
   getDoc,
   Timestamp,
+  where,
+  query,
 } from 'firebase/firestore';
 import { Skeleton } from '../ui/skeleton';
 
@@ -83,6 +85,13 @@ const TenantManagement = ({ tenants = [] }: TenantManagementProps) => {
     leaseEnd: '',
     rentAmount: 0,
   });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Tenant[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showRatingDialog, setShowRatingDialog] = useState(false);
+  const [tenantToRate, setTenantToRate] = useState<Tenant | null>(null);
+  const [tenantRating, setTenantRating] = useState(0);
+  const [ratingComment, setRatingComment] = useState('');
   useEffect(() => {
     const fetchTenants = async () => {
       try {
@@ -172,12 +181,6 @@ const TenantManagement = ({ tenants = [] }: TenantManagementProps) => {
     });
     setIsEditTenantOpen(true);
   };
-
-  const [showRatingDialog, setShowRatingDialog] = useState(false);
-  const [tenantToRate, setTenantToRate] = useState<Tenant | null>(null);
-  const [tenantRating, setTenantRating] = useState(0);
-  const [ratingComment, setRatingComment] = useState('');
-
   const handleDeleteTenant = (id: string) => {
     if (confirm('Are you sure you want to delete this tenant?')) {
       const tenant = tenantsList.find(t => t.id === id);
@@ -200,8 +203,8 @@ const TenantManagement = ({ tenants = [] }: TenantManagementProps) => {
 
   const handleSaveTenant = async () => {
     try {
-      // For new tenant
       if (!selectedTenant) {
+        // For new tenant
         const tenantsCollection = collection(fireDataBase, 'tenants');
         const newTenantData = {
           ...formData,
@@ -209,14 +212,24 @@ const TenantManagement = ({ tenants = [] }: TenantManagementProps) => {
         };
 
         const docRef = await addDoc(tenantsCollection, newTenantData);
-        const newTenant: Tenant = {
-          id: docRef.id,
-          ...newTenantData,
-        };
+        const tenantRef = doc(fireDataBase, 'tenants', docRef.id);
 
-        setTenantsList([...tenantsList, newTenant]);
+        // Add tenant reference to user
+        if (user?.uid) {
+          const userRef = doc(fireDataBase, 'users', user.uid);
+          await updateDoc(userRef, {
+            tenantRefs: user.tenantRefs ? [...user.tenantRefs, tenantRef] : [tenantRef],
+          });
+
+          // Update local user state
+          setUser({
+            ...user,
+            tenantRefs: user.tenantRefs ? [...user.tenantRefs, tenantRef] : [tenantRef],
+          });
+        }
+
+        setTenantsList([...tenantsList, { id: docRef.id, ...newTenantData }]);
         setIsAddTenantOpen(false);
-        // Reset form
         setFormData({
           name: '',
           email: '',
@@ -278,6 +291,138 @@ const TenantManagement = ({ tenants = [] }: TenantManagementProps) => {
       alert('Error deleting tenant. Please try again.');
     }
   };
+  const searchTenants = async (queryText: string) => {
+    if (!queryText.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const tenantsCollection = collection(fireDataBase, 'tenants');
+      const searchTerm = queryText;
+      const endTerm = searchTerm + '\uf8ff';
+
+      // Create separate queries for each field using lowercase fields
+      const emailQuery = query(
+        tenantsCollection,
+        where('email', '>=', searchTerm),
+        where('email', '<=', endTerm)
+      );
+
+      const firstNameQuery = query(
+        tenantsCollection,
+        where('firstName', '>=', searchTerm),
+        where('firstName', '<=', endTerm)
+      );
+
+      const lastNameQuery = query(
+        tenantsCollection,
+        where('lastName', '>=', searchTerm),
+        where('lastName', '<=', endTerm)
+      );
+
+      const fullNameQuery = query(
+        tenantsCollection,
+        where('full_name', '>=', searchTerm),
+        where('full_name', '<=', endTerm)
+      );
+
+      // Execute all queries in parallel
+      const [emailDocs, firstNameDocs, lastNameDocs, fullNameDocs] = await Promise.all([
+        getDocs(emailQuery),
+        getDocs(firstNameQuery),
+        getDocs(lastNameQuery),
+        getDocs(fullNameQuery),
+      ]);
+
+      // Combine results using a Map to avoid duplicates
+      const tenantMap = new Map();
+
+      [emailDocs, firstNameDocs, lastNameDocs, fullNameDocs].forEach(snapshot => {
+        snapshot.forEach(doc => {
+          if (!tenantMap.has(doc.id)) {
+            tenantMap.set(doc.id, { id: doc.id, ...doc.data() } as Tenant);
+          }
+        });
+      });
+
+      setSearchResults(Array.from(tenantMap.values()));
+    } catch (error) {
+      console.error('Error searching tenants:', error);
+      // If the lowercase fields don't exist, fall back to client-side filtering
+      try {
+        const snapshot = await getDocs(collection(fireDataBase, 'tenants'));
+        const results: Tenant[] = [];
+        const searchTermLower = queryText.toLowerCase();
+
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const email = (data.email || '').toLowerCase();
+          const firstName = (data.firstName || '').toLowerCase();
+          const lastName = (data.lastName || '').toLowerCase();
+          const fullName = (data.full_name || '').toLowerCase();
+          const name = (data.name || '').toLowerCase();
+
+          if (
+            email.includes(searchTermLower) ||
+            firstName.includes(searchTermLower) ||
+            lastName.includes(searchTermLower) ||
+            fullName.includes(searchTermLower) ||
+            name.includes(searchTermLower)
+          ) {
+            results.push({ id: doc.id, ...data } as Tenant);
+          }
+        });
+
+        setSearchResults(results);
+      } catch (fallbackError) {
+        console.error('Error in fallback search:', fallbackError);
+      }
+    } finally {
+      setIsSearching(false);
+    }
+  };
+  const handleSelectTenant = async (tenant: Tenant) => {
+    if (!user?.uid) {
+      alert('You must be logged in to add a tenant.');
+      return;
+    }
+
+    try {
+      const tenantRef = doc(fireDataBase, 'tenants', tenant.id);
+
+      // Check if tenant is already in user's tenantRefs
+      const isAlreadyAdded = user.tenantRefs?.some(ref => ref.path === `tenants/${tenant.id}`);
+
+      if (isAlreadyAdded) {
+        alert('This tenant is already added to your account.');
+        return;
+      }
+
+      // Add tenant reference to user
+      const userRef = doc(fireDataBase, 'users', user.uid);
+      await updateDoc(userRef, {
+        tenantRefs: user.tenantRefs ? [...user.tenantRefs, tenantRef] : [tenantRef],
+      });
+
+      // Update local user state
+      setUser({
+        ...user,
+        tenantRefs: user.tenantRefs ? [...user.tenantRefs, tenantRef] : [tenantRef],
+      });
+
+      // Reset search
+      setSearchQuery('');
+      setSearchResults([]);
+      setIsAddTenantOpen(false);
+
+      alert('Tenant added successfully!');
+    } catch (error) {
+      console.error('Error adding tenant:', error);
+      alert('Error adding tenant. Please try again.');
+    }
+  };
 
   if (loading) {
     return (
@@ -336,40 +481,76 @@ const TenantManagement = ({ tenants = [] }: TenantManagementProps) => {
             <DialogHeader>
               <DialogTitle>Add New Tenant</DialogTitle>
               <DialogDescription>
-                Fill in the tenant details below to add a new tenant to your property.
+                Search for an existing tenant or fill in the details to add a new tenant.
               </DialogDescription>
             </DialogHeader>
-            <div className="gap-4 grid py-4">
-              <div className="gap-4 grid grid-cols-2">
-                <div className="space-y-2">
-                  <label htmlFor="name" className="font-medium text-sm">
-                    Full Name
-                  </label>
-                  <Input
-                    id="name"
-                    placeholder="John Doe"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="email" className="font-medium text-sm">
-                    Email
-                  </label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="john.doe@example.com"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                  />
+
+            {/* Search section */}
+            <div className="mb-4 pb-4 border-b">
+              <div className="space-y-2">
+                <Label htmlFor="tenantSearch">Search Existing Tenants</Label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Search className="top-2.5 left-3 absolute w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="tenantSearch"
+                      placeholder="Search by email, name..."
+                      className="pl-10"
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => searchTenants(searchQuery)}
+                    disabled={isSearching || !searchQuery.trim()}
+                  >
+                    {isSearching ? 'Searching...' : 'Search'}
+                  </Button>
                 </div>
               </div>
-              {/* Rest of the form fields remain the same */}
-              {/* ... */}
+
+              {/* Search results */}
+              {searchResults.length > 0 && (
+                <div className="mt-4 border rounded-md max-h-60 overflow-y-auto">
+                  <div className="bg-muted p-2 font-medium text-sm">Search Results</div>
+                  <div className="divide-y">
+                    {searchResults.map(tenant => (
+                      <div
+                        key={tenant.id}
+                        className="flex justify-between items-center hover:bg-muted/50 p-3 cursor-pointer"
+                        onClick={() => handleSelectTenant(tenant)}
+                      >
+                        <div>
+                          <div className="font-medium">{tenant.full_name || tenant.name}</div>
+                          <div className="text-muted-foreground text-sm">{tenant.email}</div>
+                        </div>
+                        <Button size="sm" variant="ghost">
+                          Add
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {searchQuery && searchResults.length === 0 && !isSearching && (
+                <div className="bg-muted/20 mt-4 p-3 rounded-md text-muted-foreground text-center">
+                  No tenants found. Fill in the details below to add a new tenant.
+                </div>
+              )}
             </div>
+
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddTenantOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsAddTenantOpen(false);
+                  setSearchQuery('');
+                  setSearchResults([]);
+                }}
+              >
                 Cancel
               </Button>
               <Button onClick={handleSaveTenant}>Save Tenant</Button>
