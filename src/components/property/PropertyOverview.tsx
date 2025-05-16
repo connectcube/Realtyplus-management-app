@@ -533,12 +533,13 @@ const PropertyDialog = ({
         setError('You must be logged in to add properties');
         return;
       }
-      console.log(user);
+
       const userRef = doc(fireDataBase, user.role, user.uid);
 
+      // Create a new property object for listings-managementApp
       const newProperty = {
-        id: Date.now().toString(),
-        name: property.title || property.name,
+        title: property.title || property.name,
+        type: property.propertyType || property.type,
         propertyType: property.propertyType || property.type,
         address: property.address || '',
         units: property.units || 1,
@@ -549,23 +550,35 @@ const PropertyDialog = ({
         postedByDetails: {
           uid: user.uid,
           userName: user.userName,
+          role: user.role,
         },
         createdAt: new Date().toISOString(),
       };
 
-      await updateDoc(userRef, {
-        properties: arrayUnion(newProperty),
+      // 1. Add the property to the listings-managementApp collection
+      const listingRef = await addDoc(
+        collection(fireDataBase, 'listings-managementApp'),
+        newProperty
+      );
+      await updateDoc(listingRef, {
+        uid: listingRef.id,
       });
 
-      // Update local state
-      const updatedProperties = [...(user.properties || []), newProperty];
+      // 2. Add the property reference to the user's propertyRefs array
+      await updateDoc(userRef, {
+        propertyRefs: arrayUnion(listingRef),
+      });
+
+      // Update local state with the new property
+      const updatedProperty = { ...newProperty, uid: listingRef.id };
+      const updatedProperties = [...(user.properties || []), updatedProperty];
       setUser({
         properties: updatedProperties,
       });
 
       // Notify parent component
       if (onPropertyAdded) {
-        onPropertyAdded(newProperty);
+        onPropertyAdded(updatedProperty);
       }
 
       setFormData({
@@ -587,6 +600,7 @@ const PropertyDialog = ({
       setLoading(false);
     }
   };
+
   const handleDialogClose = async () => {
     // Check if we have an uploaded image that needs to be deleted
     if (uploadedImageRef && formData.image) {
