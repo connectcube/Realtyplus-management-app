@@ -35,6 +35,7 @@ import {
   getDoc,
   Timestamp,
 } from 'firebase/firestore';
+import { Skeleton } from '../ui/skeleton';
 
 interface Tenant {
   id: string;
@@ -279,7 +280,42 @@ const TenantManagement = ({ tenants = [] }: TenantManagementProps) => {
   };
 
   if (loading) {
-    return <div className="flex justify-center items-center h-full">Loading tenants...</div>;
+    return (
+      <div className="flex flex-col gap-4 p-4 w-full">
+        <div className="flex justify-between items-center">
+          <Skeleton className="w-48 h-8" />
+          <Skeleton className="w-36 h-10" />
+        </div>
+        <div className="flex justify-between items-center mt-4">
+          <Skeleton className="w-1/3 h-10" />
+          <Skeleton className="w-64 h-10" />
+        </div>
+        <div className="gap-4 sm:gap-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mt-6">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="p-4 border rounded-lg">
+              <div className="flex justify-between items-start mb-2">
+                <Skeleton className="w-32 h-6" />
+                <div className="flex space-x-2">
+                  <Skeleton className="rounded-full w-8 h-8" />
+                  <Skeleton className="rounded-full w-8 h-8" />
+                </div>
+              </div>
+              <Skeleton className="mt-1 w-48 h-4" />
+              <Skeleton className="mt-2 w-16 h-4" />
+              <div className="space-y-2 mt-4">
+                <Skeleton className="w-full h-4" />
+                <Skeleton className="w-full h-4" />
+                <Skeleton className="w-full h-4" />
+              </div>
+              <div className="flex justify-between items-center mt-4 pt-4 border-t">
+                <Skeleton className="w-24 h-4" />
+                <Skeleton className="w-24 h-8" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (

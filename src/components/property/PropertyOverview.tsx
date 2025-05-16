@@ -52,6 +52,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import UserSelector from '../user-selector/UserSelector';
 import { deleteObject, getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import PropertyCard from './PropertyCard';
+import { Skeleton } from '../ui/skeleton';
 interface Property {
   uid: string;
   title: string;
@@ -150,10 +151,64 @@ const PropertyOverview = ({ properties = defaultProperties }: PropertyOverviewPr
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center p-6 w-full h-full">
-        <div className="text-center">
-          <Loader2 className="mx-auto w-8 h-8 text-primary animate-spin" />
-          <p className="mt-2 text-muted-foreground">Loading properties...</p>
+      <div className="bg-white shadow-sm p-6 rounded-lg w-full h-full">
+        {/* Header skeleton */}
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <Skeleton className="mb-2 w-48 h-8" />
+            <Skeleton className="w-64 h-4" />
+          </div>
+          <Skeleton className="w-32 h-10" />
+        </div>
+
+        {/* Summary Cards skeleton */}
+        <div className="gap-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 mb-6">
+          {[1, 2, 3, 4, 5].map(i => (
+            <Card key={i}>
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <Skeleton className="mb-2 w-24 h-4" />
+                    <Skeleton className="w-16 h-8" />
+                  </div>
+                  <Skeleton className="rounded-full w-8 h-8" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Tabs skeleton */}
+        <div className="mb-4">
+          <Skeleton className="w-full h-10" />
+        </div>
+
+        {/* Property cards skeleton */}
+        <div className="gap-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map(i => (
+            <Card key={i}>
+              <div className="w-full aspect-video">
+                <Skeleton className="w-full h-full" />
+              </div>
+              <CardHeader>
+                <Skeleton className="mb-2 w-3/4 h-6" />
+                <Skeleton className="w-1/2 h-4" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <Skeleton className="w-full h-4" />
+                  <Skeleton className="w-full h-4" />
+                  <Skeleton className="w-3/4 h-4" />
+                </div>
+              </CardContent>
+              <CardFooter>
+                <div className="flex justify-between w-full">
+                  <Skeleton className="w-20 h-8" />
+                  <Skeleton className="w-20 h-8" />
+                </div>
+              </CardFooter>
+            </Card>
+          ))}
         </div>
       </div>
     );
