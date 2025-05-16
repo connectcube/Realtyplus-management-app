@@ -97,13 +97,15 @@ const TenantManagement = ({ tenants = [] }: TenantManagementProps) => {
             if (snapshot.exists()) {
               const tenantData = snapshot.data();
 
-              // Get property details from propertyRefs[0]
+              // Get property details from propertyRef (single reference) or propertyRefs[0] (array)
               let propertyData = {};
-              if (tenantData.propertyRefs?.[0]) {
-                const propertySnapshot = await getDoc(tenantData.propertyRefs[0]);
+              const propertyReference = tenantData.propertyRef || tenantData.propertyRefs?.[0];
+
+              if (propertyReference) {
+                const propertySnapshot = await getDoc(propertyReference);
                 if (propertySnapshot.exists()) {
                   const propData = propertySnapshot.data() as Property;
-
+                  console.log('OG data ', propData);
                   // Handle lease data with timestamps
                   const leaseStartDate = propData.lease?.startDate?.toDate?.()
                     ? propData.lease.startDate.toDate().toISOString().split('T')[0]
@@ -122,7 +124,7 @@ const TenantManagement = ({ tenants = [] }: TenantManagementProps) => {
                   };
                 }
               }
-
+              console.log('transformed data ', propertyData);
               return { id: snapshot.id, ...tenantData, ...propertyData } as Tenant;
             }
             return null;
@@ -467,7 +469,7 @@ const TenantManagement = ({ tenants = [] }: TenantManagementProps) => {
                 <div className="space-y-3">
                   <div>
                     <p className="font-medium text-sm">Name</p>
-                    <p>{selectedTenant.name}</p>
+                    <p>{selectedTenant.full_name}</p>
                   </div>
                   <div>
                     <p className="font-medium text-sm">Email</p>
